@@ -24,7 +24,9 @@
       <el-table-column prop="id" label="订单ID" width="90" />
       <el-table-column prop="contactName" label="联系人" width="120" />
       <el-table-column prop="contactPhone" label="电话" width="140" />
-      <el-table-column prop="totalAmount" label="总价" width="100" />
+      <el-table-column label="总价" width="100">
+        <template #default="{ row }">¥{{ formatPrice(row.totalAmount) }}</template>
+      </el-table-column>
       <el-table-column prop="status" label="状态" width="110">
         <template #default="{ row }">
           <el-tag :type="getOrderStatusMeta(row.status).tagType">
@@ -67,6 +69,7 @@ import { useTable } from '@/composables/useTable'
 import { getOrderStatusMeta, ORDER_STATUS_OPTIONS } from '@/constants/status'
 import type { Order } from '@/types'
 import { formatDateTime } from '@/utils/date'
+import { formatPrice } from '@/utils/money'
 
 const { loading, list, total, query, fetchList, search } = useTable<
   Order,

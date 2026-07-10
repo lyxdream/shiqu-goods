@@ -19,7 +19,7 @@
         <div class="goods">
           {{ item.items.map((g) => `${g.productName} x${g.quantity}`).join('、') }}
         </div>
-        <div class="amount">合计 ¥{{ item.totalAmount }}</div>
+        <div class="amount">合计 ¥{{ formatPrice(item.totalAmount) }}</div>
       </div>
     </div>
   </div>
@@ -31,6 +31,7 @@ import { getOrderList } from '@/api/order'
 import { getOrderStatusMeta } from '@/constants/status'
 import type { Order } from '@/types'
 import { formatDateTime } from '@/utils/date'
+import { formatPrice } from '@/utils/money'
 
 const loading = ref(false)
 const list = ref<Order[]>([])

@@ -19,7 +19,7 @@
         <div class="info">
           <div class="name">{{ item.name }}</div>
           <div class="meta">
-            <span class="price">¥{{ item.price }}</span>
+            <span class="price">¥{{ formatPrice(item.price) }}</span>
             <span class="muted">库存 {{ item.stock }}</span>
           </div>
         </div>
@@ -33,6 +33,7 @@ import { onMounted, ref } from 'vue'
 import { getProductList } from '@/api/product'
 import type { Product } from '@/types'
 import { resolveAssetUrl } from '@/utils/url'
+import { formatPrice } from '@/utils/money'
 
 const loading = ref(false)
 const list = ref<Product[]>([])

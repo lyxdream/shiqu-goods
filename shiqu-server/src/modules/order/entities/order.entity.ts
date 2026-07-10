@@ -22,7 +22,8 @@ export class Order extends BaseEntity {
   @Column({ name: 'pickup_address', type: 'text' })
   pickupAddress: string;
 
-  @Column({ name: 'total_amount', type: 'decimal', precision: 10, scale: 2 })
+  /** 订单总金额，单位：分 */
+  @Column({ name: 'total_amount', type: 'int' })
   totalAmount: number;
 
   @Column({

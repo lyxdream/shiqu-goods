@@ -16,7 +16,7 @@ export class CreateProductDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ description: '价格' })
+  @ApiProperty({ description: '价格（元）' })
   @IsNumber()
   @Min(0)
   price: number;

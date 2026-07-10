@@ -2,6 +2,12 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProductStatusEnum } from 'src/common/enums';
+import {
+  mapPageProductsToApi,
+  mapProductToApi,
+  mapProductsToApi,
+  toCents,
+} from 'src/common/utils/money.util';
 import { paginate } from 'src/common/utils/paginate.util';
 import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -15,11 +21,12 @@ export class ProductService {
     private readonly productRepository: Repository<Product>,
   ) {}
 
-  findAllForCustomer() {
-    return this.productRepository.find({
+  async findAllForCustomer() {
+    const list = await this.productRepository.find({
       where: { status: ProductStatusEnum.ON_SALE },
       order: { createdAt: 'DESC' },
     });
+    return mapProductsToApi(list);
   }
 
   async findOneForCustomer(id: number) {
@@ -29,7 +36,7 @@ export class ProductService {
     if (!product) {
       throw new NotFoundException('商品不存在或已下架');
     }
-    return product;
+    return mapProductToApi(product);
   }
 
   async findAllForAdmin(query: QueryProductDto) {
@@ -43,7 +50,8 @@ export class ProductService {
     }
 
     qb.orderBy('product.createdAt', 'DESC');
-    return paginate(qb, query);
+    const page = await paginate(qb, query);
+    return mapPageProductsToApi(page);
   }
 
   async findOne(id: number) {
@@ -51,28 +59,46 @@ export class ProductService {
     if (!product) {
       throw new NotFoundException('商品不存在');
     }
-    return product;
+    return mapProductToApi(product);
   }
 
-  create(dto: CreateProductDto) {
-    const product = this.productRepository.create(dto);
-    return this.productRepository.save(product);
+  async create(dto: CreateProductDto) {
+    const product = this.productRepository.create({
+      ...dto,
+      price: toCents(dto.price),
+    });
+    const saved = await this.productRepository.save(product);
+    return mapProductToApi(saved);
   }
 
   async update(id: number, dto: UpdateProductDto) {
-    const product = await this.findOne(id);
-    Object.assign(product, dto);
-    return this.productRepository.save(product);
+    const product = await this.productRepository.findOne({ where: { id } });
+    if (!product) {
+      throw new NotFoundException('商品不存在');
+    }
+    Object.assign(product, {
+      ...dto,
+      ...(dto.price !== undefined ? { price: toCents(dto.price) } : {}),
+    });
+    const saved = await this.productRepository.save(product);
+    return mapProductToApi(saved);
   }
 
   async updateStatus(id: number, status: ProductStatusEnum) {
-    const product = await this.findOne(id);
+    const product = await this.productRepository.findOne({ where: { id } });
+    if (!product) {
+      throw new NotFoundException('商品不存在');
+    }
     product.status = status;
-    return this.productRepository.save(product);
+    const saved = await this.productRepository.save(product);
+    return mapProductToApi(saved);
   }
 
   async remove(id: number) {
-    const product = await this.findOne(id);
+    const product = await this.productRepository.findOne({ where: { id } });
+    if (!product) {
+      throw new NotFoundException('商品不存在');
+    }
     await this.productRepository.remove(product);
     return null;
   }

@@ -7,7 +7,8 @@ export class Product extends BaseEntity {
   @Column({ length: 100 })
   name: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  /** 价格，单位：分 */
+  @Column({ type: 'int' })
   price: number;
 
   @Column({ type: 'int', default: 0 })

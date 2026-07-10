@@ -25,11 +25,11 @@
         <div v-for="item in order.items" :key="item.id" class="item-row">
           <div>
             <div>{{ item.productName }}</div>
-            <div class="muted">¥{{ item.unitPrice }} x {{ item.quantity }}</div>
+            <div class="muted">¥{{ formatPrice(item.unitPrice) }} x {{ item.quantity }}</div>
           </div>
-          <div>¥{{ Number(item.unitPrice) * item.quantity }}</div>
+          <div>¥{{ formatPrice(Number(item.unitPrice) * item.quantity) }}</div>
         </div>
-        <div class="total">合计 ¥{{ order.totalAmount }}</div>
+        <div class="total">合计 ¥{{ formatPrice(order.totalAmount) }}</div>
       </div>
 
       <div v-if="order.status === 'pending_payment'" class="actions">
@@ -49,6 +49,7 @@ import { getOrderDetail, payOrder } from '@/api/order'
 import { getOrderStatusMeta } from '@/constants/status'
 import type { Order } from '@/types'
 import { formatDateTime } from '@/utils/date'
+import { formatPrice } from '@/utils/money'
 
 const route = useRoute()
 const order = ref<Order | null>(null)

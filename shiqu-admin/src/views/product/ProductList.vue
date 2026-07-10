@@ -42,7 +42,9 @@
         </template>
       </el-table-column>
       <el-table-column prop="name" label="名称" min-width="140" />
-      <el-table-column prop="price" label="价格" width="100" />
+      <el-table-column label="价格" width="100">
+        <template #default="{ row }">¥{{ formatPrice(row.price) }}</template>
+      </el-table-column>
       <el-table-column prop="stock" label="库存" width="90" />
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
@@ -92,6 +94,7 @@ import { getProductStatusMeta, PRODUCT_STATUS_OPTIONS } from '@/constants/status
 import type { Product } from '@/types'
 import { applyStatusChange } from '@/utils/status'
 import { resolveAssetUrl } from '@/utils/url'
+import { formatPrice } from '@/utils/money'
 
 const { loading, list, total, query, fetchList, search } = useTable<
   Product,

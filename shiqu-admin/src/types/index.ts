@@ -29,6 +29,7 @@ export interface AdminUser {
 export interface Product {
   id: number
   name: string
+  /** 价格（元），API 层与展示单位 */
   price: number
   stock: number
   image: string
@@ -43,6 +44,7 @@ export interface OrderItem {
   productId: number
   productName: string
   quantity: number
+  /** 成交单价（元） */
   unitPrice: number
 }
 
@@ -52,6 +54,7 @@ export interface Order {
   contactName: string
   contactPhone: string
   pickupAddress: string
+  /** 订单总金额（元） */
   totalAmount: number
   status: 'pending_payment' | 'paid' | 'picked_up' | 'cancelled'
   items: OrderItem[]

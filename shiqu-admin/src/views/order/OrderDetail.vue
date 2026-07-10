@@ -30,7 +30,7 @@
         <el-descriptions-item label="自提地址" :span="2">
           {{ detail.pickupAddress }}
         </el-descriptions-item>
-        <el-descriptions-item label="总价">{{ detail.totalAmount }}</el-descriptions-item>
+        <el-descriptions-item label="总价">¥{{ formatPrice(detail.totalAmount) }}</el-descriptions-item>
         <el-descriptions-item label="下单时间">
           {{ formatDateTime(detail.createdAt) }}
         </el-descriptions-item>
@@ -39,7 +39,9 @@
       <h3 class="section-title">商品明细</h3>
       <el-table :data="detail.items" border>
         <el-table-column prop="productName" label="商品" />
-        <el-table-column prop="unitPrice" label="单价" width="120" />
+        <el-table-column label="单价" width="120">
+          <template #default="{ row }">¥{{ formatPrice(row.unitPrice) }}</template>
+        </el-table-column>
         <el-table-column prop="quantity" label="数量" width="100" />
       </el-table>
     </template>
@@ -54,6 +56,7 @@ import { useDetail } from '@/composables/useFormPage'
 import { ORDER_STATUS_OPTIONS } from '@/constants/status'
 import type { Order } from '@/types'
 import { formatDateTime } from '@/utils/date'
+import { formatPrice } from '@/utils/money'
 
 const { loading, detail } = useDetail(getOrderDetail)
 const statusUpdating = ref(false)

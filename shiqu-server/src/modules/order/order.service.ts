@@ -10,7 +10,12 @@ import {
   OrderStatusEnum,
   ProductStatusEnum,
 } from 'src/common/enums';
-import { calcLineAmount, toCents, fromCents } from 'src/common/utils/money.util';
+import {
+  calcLineAmountCents,
+  mapOrderToApi,
+  mapOrdersToApi,
+  mapPageOrdersToApi,
+} from 'src/common/utils/money.util';
 import { paginate } from 'src/common/utils/paginate.util';
 import { DbService } from 'src/shared/db';
 import { AddressService } from 'src/modules/address/address.service';
@@ -52,15 +57,18 @@ export class OrderService {
         dto.addressId,
         manager,
       );
-      const unitPrice = fromCents(toCents(product.price));
-      const totalAmount = calcLineAmount(product.price, dto.quantity);
+      const unitPriceCents = Number(product.price);
+      const totalAmountCents = calcLineAmountCents(
+        unitPriceCents,
+        dto.quantity,
+      );
 
       const order = manager.create(Order, {
         userId,
         contactName: address.contactName,
         contactPhone: address.phone,
         pickupAddress: address.address,
-        totalAmount,
+        totalAmount: totalAmountCents,
         status: OrderStatusEnum.PENDING_PAYMENT,
       });
       const savedOrder = await manager.save(order);
@@ -70,17 +78,18 @@ export class OrderService {
         productId: product.id,
         productName: product.name,
         quantity: dto.quantity,
-        unitPrice,
+        unitPrice: unitPriceCents,
       });
       await manager.save(orderItem);
 
       product.stock -= dto.quantity;
       await manager.save(product);
 
-      return manager.findOne(Order, {
+      const createdOrder = await manager.findOne(Order, {
         where: { id: savedOrder.id },
         relations: ['items'],
       });
+      return mapOrderToApi(createdOrder!);
     });
   }
 
@@ -89,19 +98,21 @@ export class OrderService {
     this.assertTransition(order.status, OrderStatusEnum.PAID);
     order.status = OrderStatusEnum.PAID;
     await this.orderRepository.save(order);
-    return order;
+    return mapOrderToApi(order);
   }
 
-  findAllForUser(userId: number) {
-    return this.orderRepository.find({
+  async findAllForUser(userId: number) {
+    const list = await this.orderRepository.find({
       where: { userId },
       relations: ['items'],
       order: { createdAt: 'DESC' },
     });
+    return mapOrdersToApi(list);
   }
 
-  findOneForUser(userId: number, id: number) {
-    return this.findOwned(userId, id);
+  async findOneForUser(userId: number, id: number) {
+    const order = await this.findOwned(userId, id);
+    return mapOrderToApi(order);
   }
 
   async findAllForAdmin(query: QueryOrderDto) {
@@ -114,7 +125,8 @@ export class OrderService {
     }
 
     qb.orderBy('order.createdAt', 'DESC');
-    return paginate(qb, query);
+    const page = await paginate(qb, query);
+    return mapPageOrdersToApi(page);
   }
 
   async findOneForAdmin(id: number) {
@@ -125,7 +137,7 @@ export class OrderService {
     if (!order) {
       throw new NotFoundException('订单不存在');
     }
-    return order;
+    return mapOrderToApi(order);
   }
 
   async updateStatus(id: number, dto: UpdateOrderStatusDto) {
@@ -133,7 +145,7 @@ export class OrderService {
     this.assertTransition(order.status, dto.status);
     order.status = dto.status;
     await this.orderRepository.save(order);
-    return order;
+    return mapOrderToApi(order);
   }
 
   private assertTransition(from: OrderStatusEnum, to: OrderStatusEnum) {

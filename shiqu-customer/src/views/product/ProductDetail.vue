@@ -10,7 +10,7 @@
         fit="cover"
       />
       <div class="section-card">
-        <div class="price">¥{{ product.price }}</div>
+        <div class="price">¥{{ formatPrice(product.price) }}</div>
         <div class="name">{{ product.name }}</div>
         <div class="muted">库存 {{ product.stock }}</div>
       </div>
@@ -37,7 +37,7 @@
       </div>
       <div class="bottom-space" />
       <van-submit-bar
-        :price="Number(product.price) * quantity * 100"
+        :price="toCents(product.price) * quantity"
         button-text="提交订单"
         :disabled="!product.stock"
         :loading="submitting"
@@ -78,6 +78,7 @@ import { getProductDetail } from '@/api/product'
 import type { Address, Product } from '@/types'
 import { useUserStore } from '@/stores/user'
 import { resolveAssetUrl } from '@/utils/url'
+import { formatPrice, toCents } from '@/utils/money'
 
 const route = useRoute()
 const router = useRouter()
