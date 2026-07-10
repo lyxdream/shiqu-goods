@@ -31,7 +31,9 @@
           {{ detail.pickupAddress }}
         </el-descriptions-item>
         <el-descriptions-item label="总价">{{ detail.totalAmount }}</el-descriptions-item>
-        <el-descriptions-item label="下单时间">{{ detail.createdAt }}</el-descriptions-item>
+        <el-descriptions-item label="下单时间">
+          {{ formatDateTime(detail.createdAt) }}
+        </el-descriptions-item>
       </el-descriptions>
 
       <h3 class="section-title">商品明细</h3>
@@ -51,6 +53,7 @@ import { getOrderDetail, updateOrderStatus } from '@/api/order'
 import { useDetail } from '@/composables/useFormPage'
 import { ORDER_STATUS_OPTIONS } from '@/constants/status'
 import type { Order } from '@/types'
+import { formatDateTime } from '@/utils/date'
 
 const { loading, detail } = useDetail(getOrderDetail)
 const statusUpdating = ref(false)

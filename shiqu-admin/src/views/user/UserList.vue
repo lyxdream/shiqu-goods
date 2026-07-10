@@ -37,7 +37,11 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="createdAt" label="注册时间" min-width="170" />
+      <el-table-column label="注册时间" min-width="170">
+        <template #default="{ row }">
+          {{ formatDateTime(row.createdAt) }}
+        </template>
+      </el-table-column>
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
           <el-button
@@ -58,25 +62,23 @@
       </el-table-column>
     </el-table>
 
-    <div class="pager">
-      <el-pagination
-        v-model:current-page="query.pageNum"
-        v-model:page-size="query.pageSize"
-        :page-sizes="[10, 20, 50]"
-        layout="total, sizes, prev, pager, next"
-        :total="total"
-        @current-change="fetchList"
-        @size-change="search"
-      />
-    </div>
+    <TablePagination
+      v-model:page-num="query.pageNum"
+      v-model:page-size="query.pageSize"
+      :total="total"
+      @page-change="fetchList"
+      @size-change="search"
+    />
   </el-card>
 </template>
 
 <script setup lang="ts">
 import { getUserList, updateUserStatus, type UserListQuery } from '@/api/user'
+import TablePagination from '@/components/TablePagination.vue'
 import { useTable } from '@/composables/useTable'
 import { getUserStatusMeta, USER_STATUS_OPTIONS } from '@/constants/status'
 import type { AdminUser } from '@/types'
+import { formatDateTime } from '@/utils/date'
 import { applyStatusChange } from '@/utils/status'
 
 const { loading, list, total, query, fetchList, search } = useTable<

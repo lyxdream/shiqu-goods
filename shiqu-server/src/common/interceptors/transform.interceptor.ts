@@ -3,14 +3,10 @@ import {
   ExecutionContext,
   Injectable,
   NestInterceptor,
-} from '@nestjs/common';
-import { Observable, map } from 'rxjs';
-
-export interface ApiResponse<T> {
-  code: number;
-  message: string;
-  data: T;
-}
+} from '@nestjs/common'
+import { Observable, map } from 'rxjs'
+import { ResponseCode } from 'src/common/constants/response-code'
+import type { ApiResponse } from 'src/common/interfaces/api-response.interface'
 
 @Injectable()
 export class TransformInterceptor<T>
@@ -22,10 +18,10 @@ export class TransformInterceptor<T>
   ): Observable<ApiResponse<T>> {
     return next.handle().pipe(
       map((data) => ({
-        code: 200,
+        code: ResponseCode.SUCCESS,
         message: 'success',
         data,
       })),
-    );
+    )
   }
 }

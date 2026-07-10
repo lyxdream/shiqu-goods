@@ -68,17 +68,13 @@
       </el-table-column>
     </el-table>
 
-    <div class="pager">
-      <el-pagination
-        v-model:current-page="query.pageNum"
-        v-model:page-size="query.pageSize"
-        :page-sizes="[10, 20, 50]"
-        layout="total, sizes, prev, pager, next"
-        :total="total"
-        @current-change="fetchList"
-        @size-change="search"
-      />
-    </div>
+    <TablePagination
+      v-model:page-num="query.pageNum"
+      v-model:page-size="query.pageSize"
+      :total="total"
+      @page-change="fetchList"
+      @size-change="search"
+    />
   </el-card>
 </template>
 
@@ -90,6 +86,7 @@ import {
   updateProductStatus,
   type ProductListQuery,
 } from '@/api/product'
+import TablePagination from '@/components/TablePagination.vue'
 import { useTable } from '@/composables/useTable'
 import { getProductStatusMeta, PRODUCT_STATUS_OPTIONS } from '@/constants/status'
 import type { Product } from '@/types'

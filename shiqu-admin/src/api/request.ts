@@ -1,8 +1,9 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import type { ApiResponse } from '@/types'
+import { SUCCESS_CODES } from '@/constants/response-code'
 import { tokenStorage } from '@/utils/storage'
-import router from '@/router'
+import { responseStatusCallback } from './response-status'
 
 const request = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '',
@@ -33,26 +34,15 @@ request.interceptors.request.use((config) => {
 
 request.interceptors.response.use(
   (response) => {
-    const res = response.data as ApiResponse
-    if (res.code !== 200) {
-      ElMessage.error(res.message || '请求失败')
-      return Promise.reject(new Error(res.message || '请求失败'))
+    const { code, data } = response.data as ApiResponse
+    if (SUCCESS_CODES.includes(code as (typeof SUCCESS_CODES)[number])) {
+      return data as never
     }
-    return res.data as never
+    return responseStatusCallback(response)
   },
   (error) => {
-    const status = error.response?.status
-    const message =
-      error.response?.data?.message || error.message || '网络异常'
-
-    if (status === 401) {
-      tokenStorage.remove()
-      router.push({ name: 'Login' })
-      ElMessage.error('登录已过期，请重新登录')
-    } else {
-      ElMessage.error(message)
-    }
-
+    const message = error.message || '网络异常'
+    ElMessage.error(message)
     return Promise.reject(error)
   },
 )

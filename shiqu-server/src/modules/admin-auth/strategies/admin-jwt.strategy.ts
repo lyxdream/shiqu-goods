@@ -1,11 +1,13 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import type { JwtAdminPayload } from 'src/common/types/jwt-payload';
-import { Admin } from '../entities/admin.entity';
+import { Injectable } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
+import { PassportStrategy } from '@nestjs/passport'
+import { ExtractJwt, Strategy } from 'passport-jwt'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
+import { ResponseCode } from 'src/common/constants/response-code'
+import { BusinessException } from 'src/common/exceptions/business.exception'
+import type { JwtAdminPayload } from 'src/common/types/jwt-payload'
+import { Admin } from '../entities/admin.entity'
 
 @Injectable()
 export class AdminJwtStrategy extends PassportStrategy(Strategy, 'admin-jwt') {
@@ -18,19 +20,25 @@ export class AdminJwtStrategy extends PassportStrategy(Strategy, 'admin-jwt') {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: configService.get<string>('jwt.adminSecret')!,
-    });
+    })
   }
 
   async validate(payload: JwtAdminPayload) {
     if (payload.type !== 'admin') {
-      throw new UnauthorizedException('无效的管理员令牌');
+      throw new BusinessException(
+        ResponseCode.UNAUTHORIZED,
+        '无效的管理员令牌',
+      )
     }
     const admin = await this.adminRepository.findOne({
       where: { id: payload.sub },
-    });
+    })
     if (!admin) {
-      throw new UnauthorizedException('管理员不存在');
+      throw new BusinessException(
+        ResponseCode.UNAUTHORIZED,
+        '管理员不存在',
+      )
     }
-    return payload;
+    return payload
   }
 }
