@@ -1,0 +1,35 @@
+# 依赖与构建
+**/node_modules/
+**/dist/
+**/coverage/
+**/.vite/
+
+# 环境变量（保留示例文件）
+**/.env
+**/.env.local
+**/.env.*.local
+!**/.env.example
+!**/.env.production.example
+
+# 运行时数据
+**/uploads/
+**/logs/
+**/__pycache__/
+*.pyc
+*.pyo
+.Python
+.venv/
+venv/
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 测试与临时文件
+*.log
+*.tmp
+.cache/
