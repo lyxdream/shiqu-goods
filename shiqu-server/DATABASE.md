@@ -102,11 +102,11 @@ CREATE DATABASE shiqu_goods DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicod
 - `findOne`：查个人资料
 - `save`：改资料、改密码
 
-### 4. `src/modules/user-admin/user-admin.service.ts`
+### 4. `src/modules/user/user-admin.service.ts`
 
 - `createQueryBuilder`：分页查用户列表
 - `save`：编辑用户、改启用/禁用状态
-- `findOne`：查用户详情
+- `findById`（复用 UserService）：查用户详情
 
 ### 5. `src/modules/address/address.service.ts`
 
@@ -158,8 +158,7 @@ npm run seed
 |------|------------|
 | `auth.module.ts` | `User` |
 | `admin-auth.module.ts` | `Admin` |
-| `user.module.ts` | `User` |
-| `user-admin.module.ts` | `User` |
+| `user.module.ts` | `User`（含 C 端 + B 端用户管理） |
 | `address.module.ts` | `Address` |
 | `product.module.ts` | `Product` |
 | `order.module.ts` | `Order`、`OrderItem`、`Product` |

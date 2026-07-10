@@ -4,7 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 export function setupSwagger(app: INestApplication) {
   const configService = app.get(ConfigService);
-  const enabled = configService.get<string>('SWAGGER_ENABLED') !== 'false';
+  const enabled = configService.get<boolean>('app.swaggerEnabled');
 
   if (!enabled) {
     return;

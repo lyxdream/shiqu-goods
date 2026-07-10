@@ -1,6 +1,6 @@
 import { IsEnum, IsOptional, IsString, Length } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { UserStatusEnum } from 'src/constants/user-status.enum';
+import { UserStatusEnum } from 'src/common/enums';
 
 export class UpdateUserDto {
   @ApiProperty({ required: false, description: '昵称' })

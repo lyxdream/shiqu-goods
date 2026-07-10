@@ -4,7 +4,12 @@ import { AiController } from './ai.controller';
 import { AiService } from './ai.service';
 
 @Module({
-  imports: [HttpModule],
+  imports: [
+    HttpModule.register({
+      timeout: 15000,
+      maxRedirects: 3,
+    }),
+  ],
   controllers: [AiController],
   providers: [AiService],
 })

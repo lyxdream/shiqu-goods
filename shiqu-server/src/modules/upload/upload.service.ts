@@ -11,12 +11,22 @@ export class UploadService {
   constructor(private readonly configService: ConfigService) {}
 
   getUploadDir() {
-    const dir = this.configService.get<string>('upload.dir') || 'uploads';
+    return UploadService.resolveUploadDir(
+      this.configService.get<string>('upload.dir') || 'uploads',
+    );
+  }
+
+  static resolveUploadDir(dir: string) {
     const fullPath = join(process.cwd(), dir);
     if (!existsSync(fullPath)) {
       mkdirSync(fullPath, { recursive: true });
     }
     return fullPath;
+  }
+
+  static generateFilename(originalname: string) {
+    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    return `${unique}${extname(originalname)}`;
   }
 
   validateFile(file: Express.Multer.File) {
@@ -39,7 +49,6 @@ export class UploadService {
   }
 
   generateFilename(originalname: string) {
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    return `${unique}${extname(originalname)}`;
+    return UploadService.generateFilename(originalname);
   }
 }

@@ -4,13 +4,8 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import type { JwtAdminPayload } from 'src/common/types/jwt-payload';
 import { Admin } from '../entities/admin.entity';
-
-export interface AdminJwtPayload {
-  sub: number;
-  username: string;
-  type: 'admin';
-}
 
 @Injectable()
 export class AdminJwtStrategy extends PassportStrategy(Strategy, 'admin-jwt') {
@@ -26,7 +21,7 @@ export class AdminJwtStrategy extends PassportStrategy(Strategy, 'admin-jwt') {
     });
   }
 
-  async validate(payload: AdminJwtPayload) {
+  async validate(payload: JwtAdminPayload) {
     if (payload.type !== 'admin') {
       throw new UnauthorizedException('无效的管理员令牌');
     }

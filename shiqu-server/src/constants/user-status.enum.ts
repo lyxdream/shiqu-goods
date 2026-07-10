@@ -1,4 +1,1 @@
-export enum UserStatusEnum {
-  ENABLED = 'enabled',
-  DISABLED = 'disabled',
-}
+export { UserStatusEnum } from 'src/common/enums';

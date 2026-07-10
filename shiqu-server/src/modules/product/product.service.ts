@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ProductStatusEnum } from 'src/constants/product-status.enum';
+import { ProductStatusEnum } from 'src/common/enums';
+import { paginate } from 'src/common/utils/paginate.util';
 import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
@@ -14,7 +15,7 @@ export class ProductService {
     private readonly productRepository: Repository<Product>,
   ) {}
 
-  async findAllForCustomer() {
+  findAllForCustomer() {
     return this.productRepository.find({
       where: { status: ProductStatusEnum.ON_SALE },
       order: { createdAt: 'DESC' },
@@ -32,8 +33,6 @@ export class ProductService {
   }
 
   async findAllForAdmin(query: QueryProductDto) {
-    const pageNum = parseInt(query.pageNum || '1', 10);
-    const pageSize = parseInt(query.pageSize || '10', 10);
     const qb = this.productRepository.createQueryBuilder('product');
 
     if (query.name) {
@@ -43,12 +42,8 @@ export class ProductService {
       qb.andWhere('product.status = :status', { status: query.status });
     }
 
-    qb.orderBy('product.createdAt', 'DESC')
-      .skip((pageNum - 1) * pageSize)
-      .take(pageSize);
-
-    const [list, total] = await qb.getManyAndCount();
-    return { list, total, pageNum, pageSize };
+    qb.orderBy('product.createdAt', 'DESC');
+    return paginate(qb, query);
   }
 
   async findOne(id: number) {
@@ -79,6 +74,6 @@ export class ProductService {
   async remove(id: number) {
     const product = await this.findOne(id);
     await this.productRepository.remove(product);
-    return { message: '删除成功' };
+    return null;
   }
 }

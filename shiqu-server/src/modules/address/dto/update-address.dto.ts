@@ -1,21 +1,4 @@
-import { IsNotEmpty, IsString, Length } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { PartialType } from '@nestjs/swagger';
+import { CreateAddressDto } from './create-address.dto';
 
-export class UpdateAddressDto {
-  @ApiProperty({ description: '联系人' })
-  @IsString()
-  @IsNotEmpty()
-  @Length(1, 50)
-  contactName: string;
-
-  @ApiProperty({ description: '联系电话' })
-  @IsString()
-  @IsNotEmpty()
-  @Length(1, 20)
-  phone: string;
-
-  @ApiProperty({ description: '收货地址' })
-  @IsString()
-  @IsNotEmpty()
-  address: string;
-}
+export class UpdateAddressDto extends PartialType(CreateAddressDto) {}

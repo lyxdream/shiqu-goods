@@ -1,5 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -7,7 +11,8 @@ import {
   comparePassword,
   hashPassword,
 } from 'src/common/utils/bcrypt.util';
-import { UserStatusEnum } from 'src/constants/user-status.enum';
+import { UserStatusEnum } from 'src/common/enums';
+import type { JwtUserPayload } from 'src/common/types/jwt-payload';
 import { User } from 'src/modules/user/entities/user.entity';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -18,19 +23,18 @@ export class AuthService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
   ) {}
 
   async register(dto: RegisterDto) {
     if (dto.password !== dto.confirmPassword) {
-      throw new UnauthorizedException('两次密码不一致');
+      throw new BadRequestException('两次密码不一致');
     }
 
     const exists = await this.userRepository.findOne({
       where: { username: dto.username },
     });
     if (exists) {
-      throw new UnauthorizedException('用户名已存在');
+      throw new ConflictException('用户名已存在');
     }
 
     const user = this.userRepository.create({
@@ -45,9 +49,12 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.userRepository.findOne({
-      where: { username: dto.username },
-    });
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('user.username = :username', { username: dto.username })
+      .getOne();
+
     if (!user) {
       throw new UnauthorizedException('用户名或密码错误');
     }
@@ -64,17 +71,13 @@ export class AuthService {
   }
 
   private buildToken(user: User) {
-    const payload = {
+    const payload: JwtUserPayload = {
       sub: user.id,
       username: user.username,
-      type: 'user' as const,
+      type: 'user',
     };
     return {
-      accessToken: this.jwtService.sign(payload, {
-        secret: this.configService.get<string>('jwt.secret'),
-        expiresIn: (this.configService.get<string>('jwt.expiresIn') ||
-          '7d') as `${number}d`,
-      }),
+      accessToken: this.jwtService.sign(payload),
     };
   }
 }

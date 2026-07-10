@@ -11,9 +11,9 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AdminJwtAuthGuard } from 'src/common/guards/admin-jwt-auth.guard';
-import { UserStatusEnum } from 'src/constants/user-status.enum';
 import { QueryUserDto } from './dto/query-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserStatusDto } from './dto/update-user-status.dto';
 import { UserAdminService } from './user-admin.service';
 
 @ApiTags('B端-用户管理')
@@ -48,8 +48,8 @@ export class UserAdminController {
   @ApiOperation({ summary: '启用/禁用用户' })
   updateStatus(
     @Param('id', ParseIntPipe) id: number,
-    @Body('status') status: UserStatusEnum,
+    @Body() dto: UpdateUserStatusDto,
   ) {
-    return this.userAdminService.updateStatus(id, status);
+    return this.userAdminService.updateStatus(id, dto.status);
   }
 }

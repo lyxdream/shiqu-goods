@@ -5,6 +5,7 @@ import { join } from 'path';
 @Injectable()
 export class LoggerService implements NestLoggerService {
   private readonly logDir = join(process.cwd(), 'logs');
+  private readonly isProd = process.env.NODE_ENV === 'production';
 
   constructor() {
     if (!existsSync(this.logDir)) {
@@ -25,12 +26,17 @@ export class LoggerService implements NestLoggerService {
   }
 
   debug(message: string, context?: string) {
+    if (this.isProd) return;
     this.write('DEBUG', message, context);
   }
 
   private write(level: string, message: string, context?: string) {
     const line = `[${new Date().toISOString()}] [${level}]${context ? ` [${context}]` : ''} ${message}\n`;
     console.log(line.trim());
-    appendFileSync(join(this.logDir, 'app.log'), line);
+    try {
+      appendFileSync(join(this.logDir, 'app.log'), line);
+    } catch {
+      // 写文件失败不影响主流程
+    }
   }
 }

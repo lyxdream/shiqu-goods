@@ -21,26 +21,33 @@ export class UserService {
   ) {}
 
   async getProfile(userId: number) {
-    const user = await this.findById(userId);
-    return this.sanitize(user);
+    return this.findById(userId);
   }
 
   async updateProfile(userId: number, dto: UpdateProfileDto) {
     const user = await this.findById(userId);
     Object.assign(user, dto);
-    await this.userRepository.save(user);
-    return this.sanitize(user);
+    return this.userRepository.save(user);
   }
 
   async updatePassword(userId: number, dto: UpdatePasswordDto) {
-    const user = await this.findById(userId);
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('user.id = :id', { id: userId })
+      .getOne();
+
+    if (!user) {
+      throw new NotFoundException('用户不存在');
+    }
+
     const valid = await comparePassword(dto.oldPassword, user.password);
     if (!valid) {
       throw new BadRequestException('原密码错误');
     }
     user.password = await hashPassword(dto.newPassword);
     await this.userRepository.save(user);
-    return { message: '密码修改成功' };
+    return null;
   }
 
   async findById(id: number) {
@@ -49,10 +56,5 @@ export class UserService {
       throw new NotFoundException('用户不存在');
     }
     return user;
-  }
-
-  sanitize(user: User) {
-    const { password: _password, ...rest } = user;
-    return rest;
   }
 }

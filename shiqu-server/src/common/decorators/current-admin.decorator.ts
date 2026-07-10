@@ -1,10 +1,7 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import type { JwtAdminPayload } from 'src/common/types/jwt-payload';
 
-export interface JwtAdminPayload {
-  sub: number;
-  username: string;
-  type: 'admin';
-}
+export type { JwtAdminPayload };
 
 export const CurrentAdmin = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): JwtAdminPayload => {

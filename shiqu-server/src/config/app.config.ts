@@ -8,4 +8,5 @@ export default registerAs('app', () => ({
   corsOrigins: (process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:5174')
     .split(',')
     .map((s) => s.trim()),
+  swaggerEnabled: process.env.SWAGGER_ENABLED !== 'false',
 }));

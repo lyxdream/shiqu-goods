@@ -1,6 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Public } from 'src/common/decorators/public.decorator';
 import { AdminAuthService } from './admin-auth.service';
 import { AdminLoginDto } from './dto/admin-login.dto';
 
@@ -9,7 +8,6 @@ import { AdminLoginDto } from './dto/admin-login.dto';
 export class AdminAuthController {
   constructor(private readonly adminAuthService: AdminAuthService) {}
 
-  @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: '管理员登录' })

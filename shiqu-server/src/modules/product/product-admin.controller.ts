@@ -13,10 +13,10 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AdminJwtAuthGuard } from 'src/common/guards/admin-jwt-auth.guard';
-import { ProductStatusEnum } from 'src/constants/product-status.enum';
 import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { UpdateProductStatusDto } from './dto/update-product-status.dto';
 import { ProductService } from './product.service';
 
 @ApiTags('B端-商品管理')
@@ -57,9 +57,9 @@ export class ProductAdminController {
   @ApiOperation({ summary: '上架/下架' })
   updateStatus(
     @Param('id', ParseIntPipe) id: number,
-    @Body('status') status: ProductStatusEnum,
+    @Body() dto: UpdateProductStatusDto,
   ) {
-    return this.productService.updateStatus(id, status);
+    return this.productService.updateStatus(id, dto.status);
   }
 
   @Delete(':id')

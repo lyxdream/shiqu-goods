@@ -1,15 +1,3 @@
-import { IsNotEmpty, IsString, Length } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { CredentialsDto } from 'src/common/dto/credentials.dto';
 
-export class AdminLoginDto {
-  @ApiProperty({ description: '管理员用户名' })
-  @IsString()
-  @IsNotEmpty()
-  @Length(3, 50)
-  username: string;
-
-  @ApiProperty({ description: '密码' })
-  @IsString()
-  @IsNotEmpty()
-  password: string;
-}
+export class AdminLoginDto extends CredentialsDto {}

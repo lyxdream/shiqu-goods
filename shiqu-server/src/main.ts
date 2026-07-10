@@ -3,11 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { LoggerService } from 'src/shared/logger';
 import { AppModule } from './app.module';
 import { setupSwagger } from './setup-swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const logger = app.get(LoggerService);
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('app.port') || 3000;
@@ -32,6 +34,6 @@ async function bootstrap() {
   setupSwagger(app);
 
   await app.listen(port);
-  console.log(`shiqu-server running on http://localhost:${port}`);
+  logger.log(`shiqu-server running on http://localhost:${port}`, 'Bootstrap');
 }
 bootstrap();

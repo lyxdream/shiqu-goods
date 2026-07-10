@@ -1,6 +1,4 @@
-export enum OrderStatusEnum {
-  PENDING_PAYMENT = 'pending_payment',
-  PAID = 'paid',
-  PICKED_UP = 'picked_up',
-  CANCELLED = 'cancelled',
-}
+export {
+  OrderStatusEnum,
+  ORDER_STATUS_TRANSITIONS,
+} from 'src/common/enums';

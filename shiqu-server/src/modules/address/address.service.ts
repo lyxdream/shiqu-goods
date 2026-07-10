@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Address } from './entities/address.entity';
 import { CreateAddressDto } from './dto/create-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
@@ -33,11 +33,14 @@ export class AddressService {
   async remove(userId: number, id: number) {
     const address = await this.findOwned(userId, id);
     await this.addressRepository.remove(address);
-    return { message: '删除成功' };
+    return null;
   }
 
-  async findOwned(userId: number, id: number) {
-    const address = await this.addressRepository.findOne({
+  async findOwned(userId: number, id: number, manager?: EntityManager) {
+    const repo = manager
+      ? manager.getRepository(Address)
+      : this.addressRepository;
+    const address = await repo.findOne({
       where: { id, userId },
     });
     if (!address) {

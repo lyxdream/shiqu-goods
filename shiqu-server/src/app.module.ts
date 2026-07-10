@@ -19,7 +19,6 @@ import { LoggerModule } from 'src/shared/logger';
 import { AuthModule } from 'src/modules/auth/auth.module';
 import { AdminAuthModule } from 'src/modules/admin-auth/admin-auth.module';
 import { UserModule } from 'src/modules/user/user.module';
-import { UserAdminModule } from 'src/modules/user-admin/user-admin.module';
 import { AddressModule } from 'src/modules/address/address.module';
 import { ProductModule } from 'src/modules/product/product.module';
 import { OrderModule } from 'src/modules/order/order.module';
@@ -38,7 +37,6 @@ import { AppController } from './app.controller';
     AuthModule,
     AdminAuthModule,
     UserModule,
-    UserAdminModule,
     AddressModule,
     ProductModule,
     OrderModule,

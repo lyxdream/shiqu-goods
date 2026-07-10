@@ -6,6 +6,9 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { NextFunction, Request, Response } from 'express';
 
+/** 管理域名也允许访问的共享 API 前缀 */
+const SHARED_API_PREFIXES = ['/api/upload'];
+
 @Injectable()
 export class ApiHostMiddleware implements NestMiddleware {
   constructor(private readonly configService: ConfigService) {}
@@ -20,12 +23,20 @@ export class ApiHostMiddleware implements NestMiddleware {
     const adminApiHost = this.configService.get<string>('app.adminApiHost');
     const host = req.hostname;
     const isAdminPath = req.path.startsWith('/api/admin');
+    const isSharedPath = SHARED_API_PREFIXES.some((prefix) =>
+      req.path.startsWith(prefix),
+    );
 
     if (host === apiHost && isAdminPath) {
       throw new ForbiddenException('C 端域名禁止访问管理接口');
     }
 
-    if (host === adminApiHost && req.path.startsWith('/api/') && !isAdminPath) {
+    if (
+      host === adminApiHost &&
+      req.path.startsWith('/api/') &&
+      !isAdminPath &&
+      !isSharedPath
+    ) {
       throw new ForbiddenException('管理域名禁止访问用户接口');
     }
 

@@ -4,14 +4,9 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserStatusEnum } from 'src/constants/user-status.enum';
+import { UserStatusEnum } from 'src/common/enums';
+import type { JwtUserPayload } from 'src/common/types/jwt-payload';
 import { User } from 'src/modules/user/entities/user.entity';
-
-export interface UserJwtPayload {
-  sub: number;
-  username: string;
-  type: 'user';
-}
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -27,7 +22,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(payload: UserJwtPayload) {
+  async validate(payload: JwtUserPayload) {
     if (payload.type !== 'user') {
       throw new UnauthorizedException('无效的令牌');
     }
