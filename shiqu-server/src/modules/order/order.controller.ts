@@ -23,10 +23,7 @@ export class OrderController {
 
   @Post()
   @ApiOperation({ summary: '提交订单' })
-  create(
-    @CurrentUser() user: JwtUserPayload,
-    @Body() dto: CreateOrderDto,
-  ) {
+  create(@CurrentUser() user: JwtUserPayload, @Body() dto: CreateOrderDto) {
     return this.orderService.create(user.sub, dto);
   }
 

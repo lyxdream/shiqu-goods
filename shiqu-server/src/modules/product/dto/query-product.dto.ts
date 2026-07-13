@@ -9,7 +9,11 @@ export class QueryProductDto extends PagingDto {
   @IsString()
   name?: string;
 
-  @ApiProperty({ required: false, description: '状态', enum: ProductStatusEnum })
+  @ApiProperty({
+    required: false,
+    description: '状态',
+    enum: ProductStatusEnum,
+  })
   @IsOptional()
   @IsEnum(ProductStatusEnum)
   status?: ProductStatusEnum;

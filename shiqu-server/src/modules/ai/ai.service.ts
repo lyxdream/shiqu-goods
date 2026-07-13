@@ -21,21 +21,26 @@ export class AiService {
     return this.configService.get<string>('ai.serviceUrl');
   }
 
-  async chat(body: AiChatDto) {
+  async chat(body: AiChatDto): Promise<unknown> {
     return this.forward(`${this.baseUrl}/chat`, body);
   }
 
-  async parseDocument(body: AiParseDocumentDto) {
+  async parseDocument(body: AiParseDocumentDto): Promise<unknown> {
     return this.forward(`${this.baseUrl}/document/parse`, body);
   }
 
-  private async forward(url: string, body: unknown) {
+  private async forward(url: string, body: unknown): Promise<unknown> {
     try {
-      const { data } = await firstValueFrom(this.httpService.post(url, body));
+      const { data } = await firstValueFrom(
+        this.httpService.post<unknown>(url, body),
+      );
       return data;
     } catch (error) {
       const axiosError = error as AxiosError;
-      if (axiosError.code === 'ECONNREFUSED' || axiosError.code === 'ETIMEDOUT') {
+      if (
+        axiosError.code === 'ECONNREFUSED' ||
+        axiosError.code === 'ETIMEDOUT'
+      ) {
         throw new ServiceUnavailableException('AI 服务暂不可用');
       }
       throw new BadGatewayException(

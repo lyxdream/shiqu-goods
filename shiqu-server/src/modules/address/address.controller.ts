@@ -32,10 +32,7 @@ export class AddressController {
 
   @Post()
   @ApiOperation({ summary: '新增地址' })
-  create(
-    @CurrentUser() user: JwtUserPayload,
-    @Body() dto: CreateAddressDto,
-  ) {
+  create(@CurrentUser() user: JwtUserPayload, @Body() dto: CreateAddressDto) {
     return this.addressService.create(user.sub, dto);
   }
 

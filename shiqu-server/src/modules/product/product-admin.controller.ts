@@ -46,10 +46,7 @@ export class ProductAdminController {
 
   @Put(':id')
   @ApiOperation({ summary: '编辑商品' })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateProductDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateProductDto) {
     return this.productService.update(id, dto);
   }
 

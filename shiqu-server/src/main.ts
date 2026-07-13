@@ -36,4 +36,4 @@ async function bootstrap() {
   await app.listen(port);
   logger.log(`shiqu-server running on http://localhost:${port}`, 'Bootstrap');
 }
-bootstrap();
+void bootstrap();

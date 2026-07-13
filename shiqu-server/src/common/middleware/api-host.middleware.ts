@@ -1,8 +1,4 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NestMiddleware,
-} from '@nestjs/common';
+import { ForbiddenException, Injectable, NestMiddleware } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NextFunction, Request, Response } from 'express';
 

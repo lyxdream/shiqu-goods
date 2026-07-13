@@ -22,11 +22,12 @@ export const ResponseCode = {
   FORBIDDEN: 1007,
 
   INTERNAL_ERROR: 1099,
-} as const
+} as const;
 
-export type ResponseCodeValue = (typeof ResponseCode)[keyof typeof ResponseCode]
+export type ResponseCodeValue =
+  (typeof ResponseCode)[keyof typeof ResponseCode];
 
 export const SUCCESS_CODES: number[] = [
   ResponseCode.SUCCESS,
   ResponseCode.SUCCESS_ALT,
-]
+];

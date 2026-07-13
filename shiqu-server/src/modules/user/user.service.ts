@@ -5,10 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  comparePassword,
-  hashPassword,
-} from 'src/common/utils/bcrypt.util';
+import { comparePassword, hashPassword } from 'src/common/utils/bcrypt.util';
 import { User } from './entities/user.entity';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';

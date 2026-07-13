@@ -49,14 +49,17 @@ export function mapOrdersToApi<T extends OrderLike>(orders: T[]): T[] {
   return orders.map(mapOrderToApi);
 }
 
-export function mapPageProductsToApi<T extends { price: number | string }>(
-  page: { list: T[]; total: number; pageNum: number; pageSize: number },
-) {
+export function mapPageProductsToApi<
+  T extends { price: number | string },
+>(page: { list: T[]; total: number; pageNum: number; pageSize: number }) {
   return { ...page, list: mapProductsToApi(page.list) };
 }
 
-export function mapPageOrdersToApi<T extends OrderLike>(
-  page: { list: T[]; total: number; pageNum: number; pageSize: number },
-) {
+export function mapPageOrdersToApi<T extends OrderLike>(page: {
+  list: T[];
+  total: number;
+  pageNum: number;
+  pageSize: number;
+}) {
   return { ...page, list: mapOrdersToApi(page.list) };
 }

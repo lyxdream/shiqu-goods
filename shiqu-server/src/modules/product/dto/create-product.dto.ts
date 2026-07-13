@@ -36,7 +36,11 @@ export class CreateProductDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ required: false, description: '状态', enum: ProductStatusEnum })
+  @ApiProperty({
+    required: false,
+    description: '状态',
+    enum: ProductStatusEnum,
+  })
   @IsOptional()
   @IsEnum(ProductStatusEnum)
   status?: ProductStatusEnum;

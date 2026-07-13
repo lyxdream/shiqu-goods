@@ -37,10 +37,7 @@ export class UserAdminController {
 
   @Put(':id')
   @ApiOperation({ summary: '编辑用户信息' })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateUserDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUserDto) {
     return this.userAdminService.update(id, dto);
   }
 
