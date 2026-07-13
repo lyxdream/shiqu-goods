@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     # LLM 配置（false 时使用规则引擎兜底）
     llm_enabled: bool = False
-    llm_api_key: str = "e20c74f69a7a41e8b240a034090d70a4"
+    llm_api_key: str = ""
     llm_base_url: str = "https://api.deepseek.com"
     # 可选模型：deepseek-v3-0324（快速低成本）或 deepseek-chat（效果最佳）
     llm_model: str = "deepseek-chat"
