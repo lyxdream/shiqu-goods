@@ -8,7 +8,7 @@ import {
   Min,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { ProductStatusEnum } from 'src/constants/product-status.enum';
+import { ProductStatusEnum } from 'src/common/enums';
 
 export class CreateProductDto {
   @ApiProperty({ description: '商品名称' })

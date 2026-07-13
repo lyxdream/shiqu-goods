@@ -1,11 +1,5 @@
 from app.schemas import ChatRequest, ChatResult
-
-
-def _format_price(price) -> str:
-    try:
-        return f"{float(price):.2f}"
-    except (TypeError, ValueError):
-        return "见详情"
+from app.utils import format_price_yuan
 
 
 def generate(req: ChatRequest) -> ChatResult:
@@ -21,7 +15,7 @@ def generate(req: ChatRequest) -> ChatResult:
 
     name = product.get("name") or "这款好物"
     product_no = product.get("productNo") or "未知商品"
-    price = _format_price(product.get("price"))
+    price = format_price_yuan(product.get("price"))
     desc = (product.get("description") or "").strip() or "品质不错，值得入手。"
     stock = product.get("stock")
     stock_text = f"现货 {stock} 件" if stock is not None else "现货供应"

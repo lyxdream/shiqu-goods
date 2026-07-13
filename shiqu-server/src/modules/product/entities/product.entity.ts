@@ -1,6 +1,6 @@
 import { Column, Entity } from 'typeorm';
 import { BaseEntity } from 'src/common/entities';
-import { ProductStatusEnum } from 'src/constants/product-status.enum';
+import { ProductStatusEnum } from 'src/common/enums';
 
 @Entity('products')
 export class Product extends BaseEntity {

@@ -56,7 +56,7 @@ npm run dev
 
 | 按钮 | 跳转 / 行为 | 说明 |
 |------|------------|------|
-| AI 咨询 | `/ai/chat?scene=assistant&productId=xxx` | 针对当前商品发起通用咨询 |
+| AI 咨询 | `/ai/chat?scene=product_qa&productId=xxx` | 针对当前商品发起答疑 |
 | 种草文案 | `/ai/chat?scene=grass_copy&productId=xxx` | 自动生成小红书 / 朋友圈风格种草文案 |
 | 种草海报 | 弹窗（无跳转） | 直接生成可保存的种草海报，含商品二维码 |
 

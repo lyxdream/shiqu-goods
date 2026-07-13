@@ -16,8 +16,24 @@ import { Order } from 'src/modules/order/entities/order.entity';
 import { AiChatDto } from './dto/ai-chat.dto';
 import { AiParseDocumentDto } from './dto/ai-parse-document.dto';
 
+type ProductContext = {
+  id: number;
+  productNo: string;
+  name: string;
+  price: number;
+  stock: number;
+  description: string;
+  status: string;
+};
+
+/** 进程内缓存，TTL 60 秒，避免每次 AI 请求都全表扫描 */
+type ProductsCache = { data: ProductContext[]; cachedAt: number };
+
 @Injectable()
 export class AiService {
+  private _productsCache: ProductsCache | null = null;
+  private readonly PRODUCTS_CACHE_TTL = 60_000; // 60 秒
+
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
@@ -29,6 +45,32 @@ export class AiService {
 
   private get baseUrl() {
     return this.configService.get<string>('ai.serviceUrl');
+  }
+
+  private async getOnSaleProducts(): Promise<ProductContext[]> {
+    const now = Date.now();
+    if (
+      this._productsCache &&
+      now - this._productsCache.cachedAt < this.PRODUCTS_CACHE_TTL
+    ) {
+      return this._productsCache.data;
+    }
+    const rows = await this.productRepository.find({
+      where: { status: ProductStatusEnum.ON_SALE },
+      order: { createdAt: 'DESC' },
+      take: 100,
+    });
+    const data = rows.map((p) => ({
+      id: p.id,
+      productNo: p.productNo,
+      name: p.name,
+      price: fromCents(p.price),
+      stock: p.stock,
+      description: p.description,
+      status: p.status,
+    }));
+    this._productsCache = { data, cachedAt: now };
+    return data;
   }
 
   async chat(userId: number, body: AiChatDto) {
@@ -59,20 +101,12 @@ export class AiService {
     const context: Record<string, unknown> = {};
     const scene = body.scene || this.inferScene(body);
 
-    if (scene === 'product_recommend' || scene === 'assistant' || scene === 'purchase_list') {
-      const products = await this.productRepository.find({
-        where: { status: ProductStatusEnum.ON_SALE },
-        order: { createdAt: 'DESC' },
-      });
-      context.products = products.map((product) => ({
-        id: product.id,
-        productNo: product.productNo,
-        name: product.name,
-        price: fromCents(product.price),
-        stock: product.stock,
-        description: product.description,
-        status: product.status,
-      }));
+    if (
+      scene === 'product_recommend' ||
+      scene === 'assistant' ||
+      scene === 'purchase_list'
+    ) {
+      context.products = await this.getOnSaleProducts();
     }
 
     if (body.productId) {
@@ -127,8 +161,8 @@ export class AiService {
         this.httpService.post<unknown>(url, body),
       );
       return data;
-    } catch (error) {
-      const axiosError = error as AxiosError;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError;
       if (
         axiosError.code === 'ECONNREFUSED' ||
         axiosError.code === 'ETIMEDOUT'

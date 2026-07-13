@@ -1,6 +1,7 @@
 from app.schemas import ChatRequest, ChatResult
 from app.services import session_store
 from app.services import grass_copy_service, purchase_list_service, recommend_service
+from app.utils import format_price_yuan
 
 ORDER_STATUS_LABEL = {
     "pending_payment": "待付款",
@@ -18,12 +19,7 @@ ORDER_STATUS_HINT = {
 
 
 def _format_price_yuan(cents_or_yuan) -> str:
-    """Nest 注入的 price 已是「元」。"""
-    try:
-        value = float(cents_or_yuan)
-    except (TypeError, ValueError):
-        return "暂无"
-    return f"{value:.2f}"
+    return format_price_yuan(cents_or_yuan)
 
 
 def _status_label(status: str | None) -> str:

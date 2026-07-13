@@ -236,8 +236,12 @@ async function send() {
       productIds: data?.productIds?.length ? data.productIds : undefined,
       copyable: scene.value === 'grass_copy',
     })
-  } catch {
-    showToast('AI 服务暂不可用')
+  } catch (err: unknown) {
+    const msg =
+      (err as { message?: string })?.message ||
+      (err as { msg?: string })?.msg ||
+      'AI 服务暂不可用'
+    showToast(msg)
   } finally {
     loading.value = false
     await scrollBottom()

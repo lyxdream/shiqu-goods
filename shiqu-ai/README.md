@@ -8,19 +8,24 @@ Python + FastAPI 独立服务，由 `shiqu-server` 通过 `AI_SERVICE_URL` HTTP 
 shiqu-ai/
 ├── app/
 │   ├── __init__.py
-│   ├── main.py                 # FastAPI 入口，挂载路由
-│   ├── config.py               # 环境变量配置
-│   ├── schemas.py              # 请求/响应模型
+│   ├── main.py                       # FastAPI 入口，挂载路由
+│   ├── config.py                     # 环境变量配置
+│   ├── schemas.py                    # 请求/响应模型
 │   ├── routers/
 │   │   ├── __init__.py
-│   │   ├── health.py           # GET  /health
-│   │   ├── chat.py             # POST /chat（MVP）
-│   │   └── document.py         # POST /document/parse（预留）
-│   └── services/
-│       ├── __init__.py
-│       ├── chat_service.py     # 商品答疑 / 订单 FAQ 逻辑
-│       ├── document_service.py # 文档解析占位
-│       └── session_store.py    # 内存会话
+│   │   ├── health.py                 # GET  /health
+│   │   ├── chat.py                   # POST /chat
+│   │   └── document.py               # POST /document/parse（预留）
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── chat_service.py           # 场景路由 + 商品答疑 / 订单 FAQ
+│   │   ├── recommend_service.py      # 站内商品推荐
+│   │   ├── grass_copy_service.py     # 种草文案生成
+│   │   ├── purchase_list_service.py  # 采购清单凑单
+│   │   ├── document_service.py       # 文档解析占位
+│   │   └── session_store.py          # 内存会话（仅记录，暂不参与生成）
+│   └── utils/
+│       └── __init__.py
 │
 ├── .env.example
 ├── .gitignore
@@ -36,12 +41,13 @@ shiqu-ai/
 | `POST /chat` | `routers/chat.py` + `services/chat_service.py` | MVP + 推荐 / 种草 |
 | `POST /document/parse` | `routers/document.py` + `services/document_service.py` | 预留，未实现 |
 
-推荐相关服务：
+已实现服务：
 
 | 文件 | 说明 |
 |------|------|
 | `services/recommend_service.py` | 站内商品推荐，**仅返回 context.products 中的 ID** |
 | `services/grass_copy_service.py` | 基于单商品 context 生成种草文案 |
+| `services/purchase_list_service.py` | 解析采购清单，逐项对照在售商品匹配，返回命中商品卡片 + 合计参考价 |
 
 ## 端口
 
@@ -86,8 +92,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 2. **购物流程 & 订单答疑**（`scene=order_help` / `assistant`）
 3. **站内商品推荐**（`scene=product_recommend` / `assistant` 内识别推荐意图）：依赖 Nest 注入 `context.products`，响应 `productIds` **仅允许站内 ID**
 4. **种草文案**（`scene=grass_copy`）：依赖 Nest 注入 `context.product`，C 端从商品详情「AI 种草文案」进入
-
-采购清单等能力未实现。
+5. **采购清单凑单**（`scene=purchase_list`）：解析用户清单，逐项匹配站内在售商品，返回命中商品卡片及合计参考价
 
 ## 与业务数据
 

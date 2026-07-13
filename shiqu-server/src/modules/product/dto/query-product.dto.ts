@@ -1,7 +1,7 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { PagingDto } from 'src/common/dto';
-import { ProductStatusEnum } from 'src/constants/product-status.enum';
+import { ProductStatusEnum } from 'src/common/enums';
 
 export class QueryProductDto extends PagingDto {
   @ApiProperty({ required: false, description: '商品名称' })
