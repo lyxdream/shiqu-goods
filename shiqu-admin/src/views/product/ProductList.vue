@@ -29,7 +29,9 @@
     </el-form>
 
     <el-table v-loading="loading" :data="list" border>
-      <el-table-column prop="id" label="ID" width="80" />
+      <el-table-column label="商品编号" width="140">
+        <template #default="{ row }">{{ row.productNo }}</template>
+      </el-table-column>
       <el-table-column label="图片" width="90">
         <template #default="{ row }">
           <el-image

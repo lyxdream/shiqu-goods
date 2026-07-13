@@ -9,7 +9,8 @@
 
     <template v-if="detail">
       <el-descriptions :column="2" border>
-        <el-descriptions-item label="订单ID">{{ detail.id }}</el-descriptions-item>
+        <el-descriptions-item label="订单号">{{ detail.orderNo }}</el-descriptions-item>
+        <el-descriptions-item label="内部ID">{{ detail.id }}</el-descriptions-item>
         <el-descriptions-item label="状态">
           <el-select
             :model-value="detail.status"

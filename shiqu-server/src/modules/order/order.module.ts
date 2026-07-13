@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { BizNoModule } from 'src/shared/biz-no';
 import { AddressModule } from 'src/modules/address/address.module';
 import { Product } from 'src/modules/product/entities/product.entity';
 import { DbModule } from 'src/shared/db';
@@ -14,6 +15,7 @@ import { OrderService } from './order.service';
     TypeOrmModule.forFeature([Order, OrderItem, Product]),
     AddressModule,
     DbModule,
+    BizNoModule,
   ],
   controllers: [OrderController, OrderAdminController],
   providers: [OrderService],

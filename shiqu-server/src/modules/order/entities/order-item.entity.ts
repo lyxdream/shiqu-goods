@@ -15,6 +15,10 @@ export class OrderItem extends BaseEntity {
   @Column({ name: 'product_id' })
   productId: number;
 
+  /** 下单时商品编号快照 */
+  @Column({ name: 'product_no', length: 20 })
+  productNo: string;
+
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id' })
   product: Product;

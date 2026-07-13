@@ -105,12 +105,12 @@ export const routes: RouteRecordRaw[] = [
     path: '/ai/chat',
     name: 'AiChat',
     component: AiChat,
-    meta: { title: 'AI 对话' },
+    meta: { title: '购物 AI 助手' },
   },
   {
     path: '/ai/document',
     name: 'AiDocument',
     component: AiDocument,
-    meta: { title: '文档解析' },
+    meta: { title: '文档解析（预留）' },
   },
 ]

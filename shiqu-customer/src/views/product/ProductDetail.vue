@@ -12,11 +12,24 @@
       <div class="section-card">
         <div class="price">¥{{ formatPrice(product.price) }}</div>
         <div class="name">{{ product.name }}</div>
+        <div class="muted">商品编号 {{ product.productNo }}</div>
         <div class="muted">库存 {{ product.stock }}</div>
       </div>
       <div class="section-card">
         <div class="label">商品简介</div>
         <p class="desc">{{ product.description || '暂无简介' }}</p>
+      </div>
+      <div class="section-card">
+        <van-button
+          round
+          block
+          type="primary"
+          plain
+          icon="chat-o"
+          @click="openAiConsult"
+        >
+          AI 咨询好物
+        </van-button>
       </div>
       <div class="section-card">
         <div class="row">
@@ -100,6 +113,26 @@ const placeholder =
 function selectAddress(item: Address) {
   selectedAddress.value = item
   showAddressPicker.value = false
+}
+
+function openAiConsult() {
+  if (!product.value) return
+  if (!userStore.isLoggedIn) {
+    router.push({
+      name: 'Login',
+      query: {
+        redirect: `/ai/chat?scene=product_qa&productId=${product.value.id}`,
+      },
+    })
+    return
+  }
+  router.push({
+    name: 'AiChat',
+    query: {
+      scene: 'product_qa',
+      productId: String(product.value.id),
+    },
+  })
 }
 
 async function handleSubmit() {

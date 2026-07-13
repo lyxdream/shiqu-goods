@@ -31,6 +31,8 @@ export interface Address {
 
 export interface Product {
   id: number
+  /** 商品编号（12 位展示号） */
+  productNo: string
   name: string
   /** 价格（元），API 层与展示单位 */
   price: number
@@ -45,6 +47,8 @@ export interface Product {
 export interface OrderItem {
   id: number
   productId: number
+  /** 商品编号（12 位展示号） */
+  productNo?: string
   productName: string
   quantity: number
   /** 成交单价（元） */
@@ -59,6 +63,8 @@ export type OrderStatus =
 
 export interface Order {
   id: number
+  /** 订单号（19 位展示号） */
+  orderNo: string
   userId: number
   contactName: string
   contactPhone: string

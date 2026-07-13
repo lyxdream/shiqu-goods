@@ -10,7 +10,7 @@
         @click="$router.push({ name: 'OrderDetail', params: { id: item.id } })"
       >
         <div class="row">
-          <span>订单 #{{ item.id }}</span>
+          <span>订单号 {{ item.orderNo }}</span>
           <van-tag :type="getOrderStatusMeta(item.status).type">
             {{ getOrderStatusMeta(item.status).label }}
           </van-tag>

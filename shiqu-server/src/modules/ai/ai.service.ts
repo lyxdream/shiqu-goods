@@ -5,8 +5,13 @@ import {
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
 import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
+import { Repository } from 'typeorm';
+import { fromCents } from 'src/common/utils/money.util';
+import { Product } from 'src/modules/product/entities/product.entity';
+import { Order } from 'src/modules/order/entities/order.entity';
 import { AiChatDto } from './dto/ai-chat.dto';
 import { AiParseDocumentDto } from './dto/ai-parse-document.dto';
 
@@ -15,18 +20,86 @@ export class AiService {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
   ) {}
 
   private get baseUrl() {
     return this.configService.get<string>('ai.serviceUrl');
   }
 
-  async chat(body: AiChatDto): Promise<unknown> {
-    return this.forward(`${this.baseUrl}/chat`, body);
+  async chat(userId: number, body: AiChatDto) {
+    const scene = body.scene || this.inferScene(body);
+    const context = await this.buildContext(userId, body);
+
+    return this.forward(`${this.baseUrl}/chat`, {
+      message: body.message,
+      sessionId: body.sessionId,
+      scene,
+      productId: body.productId,
+      orderId: body.orderId,
+      context,
+    });
   }
 
-  async parseDocument(body: AiParseDocumentDto): Promise<unknown> {
+  async parseDocument(body: AiParseDocumentDto) {
     return this.forward(`${this.baseUrl}/document/parse`, body);
+  }
+
+  private inferScene(body: AiChatDto): string {
+    if (body.productId) return 'product_qa';
+    if (body.orderId) return 'order_help';
+    return 'assistant';
+  }
+
+  private async buildContext(userId: number, body: AiChatDto) {
+    const context: Record<string, unknown> = {};
+
+    if (body.productId) {
+      const product = await this.productRepository.findOne({
+        where: { id: body.productId },
+      });
+      if (product) {
+        context.product = {
+          id: product.id,
+          productNo: product.productNo,
+          name: product.name,
+          price: fromCents(product.price),
+          stock: product.stock,
+          description: product.description,
+          status: product.status,
+        };
+      }
+    }
+
+    if (body.orderId) {
+      const order = await this.orderRepository.findOne({
+        where: { id: body.orderId, userId },
+        relations: ['items'],
+      });
+      if (order) {
+        context.order = {
+          id: order.id,
+          orderNo: order.orderNo,
+          status: order.status,
+          totalAmount: fromCents(order.totalAmount),
+          contactName: order.contactName,
+          pickupAddress: order.pickupAddress,
+          createdAt: order.createdAt,
+          items: (order.items || []).map((item) => ({
+            productId: item.productId,
+            productNo: item.productNo,
+            productName: item.productName,
+            quantity: item.quantity,
+            unitPrice: fromCents(item.unitPrice),
+          })),
+        };
+      }
+    }
+
+    return context;
   }
 
   private async forward(url: string, body: unknown): Promise<unknown> {

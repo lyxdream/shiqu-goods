@@ -4,6 +4,10 @@ import { ProductStatusEnum } from 'src/constants/product-status.enum';
 
 @Entity('products')
 export class Product extends BaseEntity {
+  /** 商品编号（业务号，唯一） */
+  @Column({ name: 'product_no', length: 20, unique: true })
+  productNo: string;
+
   @Column({ length: 100 })
   name: string;
 

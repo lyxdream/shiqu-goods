@@ -1,6 +1,8 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import type { JwtUserPayload } from 'src/common/types/jwt-payload';
 import { AiService } from './ai.service';
 import { AiChatDto } from './dto/ai-chat.dto';
 import { AiParseDocumentDto } from './dto/ai-parse-document.dto';
@@ -13,13 +15,13 @@ export class AiController {
   constructor(private readonly aiService: AiService) {}
 
   @Post('chat')
-  @ApiOperation({ summary: 'AI 智能对话' })
-  chat(@Body() body: AiChatDto) {
-    return this.aiService.chat(body);
+  @ApiOperation({ summary: 'AI 智能对话（MVP：商品答疑 / 订单答疑）' })
+  chat(@CurrentUser() user: JwtUserPayload, @Body() body: AiChatDto) {
+    return this.aiService.chat(user.sub, body);
   }
 
   @Post('document')
-  @ApiOperation({ summary: '文档解析/内容生成' })
+  @ApiOperation({ summary: '文档解析/内容生成（预留）' })
   parseDocument(@Body() body: AiParseDocumentDto) {
     return this.aiService.parseDocument(body);
   }

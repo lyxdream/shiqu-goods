@@ -9,6 +9,8 @@ import {
   toCents,
 } from 'src/common/utils/money.util';
 import { paginate } from 'src/common/utils/paginate.util';
+import { BizNoService } from 'src/shared/biz-no';
+import { DbService } from 'src/shared/db';
 import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
@@ -19,6 +21,8 @@ export class ProductService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+    private readonly dbService: DbService,
+    private readonly bizNoService: BizNoService,
   ) {}
 
   async findAllForCustomer() {
@@ -63,12 +67,16 @@ export class ProductService {
   }
 
   async create(dto: CreateProductDto) {
-    const product = this.productRepository.create({
-      ...dto,
-      price: toCents(dto.price),
+    return this.dbService.transaction(async (manager) => {
+      const productNo = await this.bizNoService.nextProductNo(manager);
+      const product = manager.create(Product, {
+        ...dto,
+        price: toCents(dto.price),
+        productNo,
+      });
+      const saved = await manager.save(product);
+      return mapProductToApi(saved);
     });
-    const saved = await this.productRepository.save(product);
-    return mapProductToApi(saved);
   }
 
   async update(id: number, dto: UpdateProductDto) {

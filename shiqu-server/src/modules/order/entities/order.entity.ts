@@ -6,6 +6,10 @@ import { OrderItem } from './order-item.entity';
 
 @Entity('orders')
 export class Order extends BaseEntity {
+  /** 订单号（业务号，唯一） */
+  @Column({ name: 'order_no', length: 32, unique: true })
+  orderNo: string;
+
   @Column({ name: 'user_id' })
   userId: number;
 

@@ -21,7 +21,9 @@
     </el-form>
 
     <el-table v-loading="loading" :data="list" border>
-      <el-table-column prop="id" label="订单ID" width="90" />
+      <el-table-column label="订单号" min-width="180">
+        <template #default="{ row }">{{ row.orderNo }}</template>
+      </el-table-column>
       <el-table-column prop="contactName" label="联系人" width="120" />
       <el-table-column prop="contactPhone" label="电话" width="140" />
       <el-table-column label="总价" width="100">

@@ -10,7 +10,7 @@
             {{ getOrderStatusMeta(order.status).label }}
           </van-tag>
         </div>
-        <div class="muted">订单号 #{{ order.id }}</div>
+        <div class="muted">订单号 {{ order.orderNo }}</div>
         <div class="muted">下单时间 {{ formatDateTime(order.createdAt) }}</div>
       </div>
 
@@ -32,8 +32,26 @@
         <div class="total">合计 ¥{{ formatPrice(order.totalAmount) }}</div>
       </div>
 
-      <div v-if="order.status === 'pending_payment'" class="actions">
-        <van-button round block type="primary" :loading="paying" @click="handlePay">
+      <div class="actions">
+        <van-button
+          round
+          block
+          plain
+          type="primary"
+          icon="chat-o"
+          @click="openOrderHelp"
+        >
+          订单问题咨询
+        </van-button>
+        <van-button
+          v-if="order.status === 'pending_payment'"
+          round
+          block
+          type="primary"
+          :loading="paying"
+          style="margin-top: 12px"
+          @click="handlePay"
+        >
           模拟付款
         </van-button>
       </div>
@@ -43,7 +61,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
 import { getOrderDetail, payOrder } from '@/api/order'
 import { getOrderStatusMeta } from '@/constants/status'
@@ -52,11 +70,23 @@ import { formatDateTime } from '@/utils/date'
 import { formatPrice } from '@/utils/money'
 
 const route = useRoute()
+const router = useRouter()
 const order = ref<Order | null>(null)
 const paying = ref(false)
 
 async function fetchDetail() {
   order.value = await getOrderDetail(Number(route.params.id))
+}
+
+function openOrderHelp() {
+  if (!order.value) return
+  router.push({
+    name: 'AiChat',
+    query: {
+      scene: 'order_help',
+      orderId: String(order.value.id),
+    },
+  })
 }
 
 async function handlePay() {

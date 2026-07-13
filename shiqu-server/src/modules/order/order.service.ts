@@ -10,6 +10,7 @@ import {
   OrderStatusEnum,
   ProductStatusEnum,
 } from 'src/common/enums';
+import { BizNoService } from 'src/shared/biz-no';
 import {
   calcLineAmountCents,
   mapOrderToApi,
@@ -37,6 +38,7 @@ export class OrderService {
     private readonly productRepository: Repository<Product>,
     private readonly addressService: AddressService,
     private readonly dbService: DbService,
+    private readonly bizNoService: BizNoService,
   ) {}
 
   async create(userId: number, dto: CreateOrderDto) {
@@ -63,8 +65,10 @@ export class OrderService {
         dto.quantity,
       );
 
+      const orderNo = await this.bizNoService.nextOrderNo(manager);
       const order = manager.create(Order, {
         userId,
+        orderNo,
         contactName: address.contactName,
         contactPhone: address.phone,
         pickupAddress: address.address,
@@ -76,6 +80,7 @@ export class OrderService {
       const orderItem = manager.create(OrderItem, {
         orderId: savedOrder.id,
         productId: product.id,
+        productNo: product.productNo,
         productName: product.name,
         quantity: dto.quantity,
         unitPrice: unitPriceCents,

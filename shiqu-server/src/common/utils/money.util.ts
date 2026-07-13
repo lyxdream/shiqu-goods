@@ -16,20 +16,27 @@ export function calcLineAmountCents(
   return unitPriceCents * quantity;
 }
 
-export function mapProductToApi<T extends { price: number | string }>(
-  product: T,
-): T {
-  return { ...product, price: fromCents(product.price) };
+export function mapProductToApi<
+  T extends { price: number | string; productNo: string },
+>(product: T): T {
+  return {
+    ...product,
+    price: fromCents(product.price),
+  };
 }
 
-export function mapProductsToApi<T extends { price: number | string }>(
-  products: T[],
-): T[] {
+export function mapProductsToApi<
+  T extends { price: number | string; productNo: string },
+>(products: T[]): T[] {
   return products.map(mapProductToApi);
 }
 
-type OrderItemLike = { unitPrice: number | string };
+type OrderItemLike = {
+  unitPrice: number | string;
+  productNo?: string;
+};
 type OrderLike = {
+  orderNo: string;
   totalAmount: number | string;
   items?: OrderItemLike[];
 };
@@ -50,7 +57,7 @@ export function mapOrdersToApi<T extends OrderLike>(orders: T[]): T[] {
 }
 
 export function mapPageProductsToApi<
-  T extends { price: number | string },
+  T extends { price: number | string; productNo: string },
 >(page: { list: T[]; total: number; pageNum: number; pageSize: number }) {
   return { ...page, list: mapProductsToApi(page.list) };
 }

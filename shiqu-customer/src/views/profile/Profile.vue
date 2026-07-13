@@ -19,8 +19,12 @@
       <van-cell title="编辑资料" is-link to="/profile/edit" />
       <van-cell title="修改密码" is-link to="/profile/password" />
       <van-cell title="收货地址" is-link to="/addresses" />
-      <van-cell title="AI 对话" is-link to="/ai/chat" />
-      <van-cell title="文档解析" is-link to="/ai/document" />
+      <van-cell
+        title="购物 AI 助手"
+        label="购物流程、自提与订单问题"
+        is-link
+        to="/ai/chat?scene=assistant"
+      />
     </van-cell-group>
 
     <div class="actions">
