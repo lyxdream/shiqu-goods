@@ -10,5 +10,9 @@ export default registerAs('app', () => ({
   )
     .split(',')
     .map((s) => s.trim()),
-  swaggerEnabled: process.env.SWAGGER_ENABLED !== 'false',
+  // 生产环境默认关闭；开发/预发需显式设 SWAGGER_ENABLED=true 才开启
+  swaggerEnabled:
+    process.env.NODE_ENV === 'production'
+      ? process.env.SWAGGER_ENABLED === 'true'
+      : process.env.SWAGGER_ENABLED !== 'false',
 }));
