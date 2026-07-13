@@ -19,16 +19,15 @@
         <div class="label">商品简介</div>
         <p class="desc">{{ product.description || '暂无简介' }}</p>
       </div>
-      <div class="section-card">
-        <van-button
-          round
-          block
-          type="primary"
-          plain
-          icon="chat-o"
-          @click="openAiConsult"
-        >
-          AI 咨询好物
+      <div class="section-card ai-btn-row">
+        <van-button round size="small" type="primary" plain icon="chat-o" @click="openAiConsult">
+          AI 咨询
+        </van-button>
+        <van-button round size="small" type="primary" plain icon="edit" @click="openAiGrassCopy">
+          种草文案
+        </van-button>
+        <van-button round size="small" type="primary" plain icon="photo-o" @click="openPoster">
+          种草海报
         </van-button>
       </div>
       <div class="section-card">
@@ -78,6 +77,16 @@
         </van-button>
       </div>
     </van-action-sheet>
+
+    <GrassPoster
+      v-if="posterVisible"
+      :name="product?.name || '好物推荐'"
+      :price="product?.price ?? 0"
+      :image="product?.image"
+      :summary="posterSummary"
+      :product-id="product?.id"
+      @close="posterVisible = false"
+    />
   </div>
 </template>
 
@@ -92,6 +101,8 @@ import type { Address, Product } from '@/types'
 import { useUserStore } from '@/stores/user'
 import { resolveAssetUrl } from '@/utils/url'
 import { formatPrice, toCents } from '@/utils/money'
+import GrassPoster from '@/components/GrassPoster.vue'
+import { truncateSummary } from '@/utils/grass-poster'
 
 const route = useRoute()
 const router = useRouter()
@@ -103,6 +114,8 @@ const selectedAddress = ref<Address | null>(null)
 const quantity = ref(1)
 const submitting = ref(false)
 const showAddressPicker = ref(false)
+const posterVisible = ref(false)
+const posterSummary = ref('')
 
 const placeholder =
   'data:image/svg+xml,' +
@@ -113,6 +126,35 @@ const placeholder =
 function selectAddress(item: Address) {
   selectedAddress.value = item
   showAddressPicker.value = false
+}
+
+function openPoster() {
+  if (!product.value) return
+  const desc = (product.value.description || '').trim() || '品质不错，值得入手。'
+  posterSummary.value = truncateSummary(
+    `【${product.value.name}】真的值得入手！亮点：${desc} 拾趣好物支持自提，欢迎入手～`,
+  )
+  posterVisible.value = true
+}
+
+function openAiGrassCopy() {
+  if (!product.value) return
+  if (!userStore.isLoggedIn) {
+    router.push({
+      name: 'Login',
+      query: {
+        redirect: `/ai/chat?scene=grass_copy&productId=${product.value.id}`,
+      },
+    })
+    return
+  }
+  router.push({
+    name: 'AiChat',
+    query: {
+      scene: 'grass_copy',
+      productId: String(product.value.id),
+    },
+  })
 }
 
 function openAiConsult() {
@@ -203,6 +245,18 @@ onMounted(async () => {
   line-height: 1.6;
   color: #646566;
   white-space: pre-wrap;
+}
+
+.ai-btn-row {
+  display: flex;
+  gap: 10px;
+  padding: 10px 16px;
+}
+
+.ai-btn-row .van-button {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
 }
 
 .row {

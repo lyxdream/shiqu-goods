@@ -10,6 +10,7 @@ import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
 import { Repository } from 'typeorm';
 import { fromCents } from 'src/common/utils/money.util';
+import { ProductStatusEnum } from 'src/common/enums';
 import { Product } from 'src/modules/product/entities/product.entity';
 import { Order } from 'src/modules/order/entities/order.entity';
 import { AiChatDto } from './dto/ai-chat.dto';
@@ -56,6 +57,23 @@ export class AiService {
 
   private async buildContext(userId: number, body: AiChatDto) {
     const context: Record<string, unknown> = {};
+    const scene = body.scene || this.inferScene(body);
+
+    if (scene === 'product_recommend' || scene === 'assistant') {
+      const products = await this.productRepository.find({
+        where: { status: ProductStatusEnum.ON_SALE },
+        order: { createdAt: 'DESC' },
+      });
+      context.products = products.map((product) => ({
+        id: product.id,
+        productNo: product.productNo,
+        name: product.name,
+        price: fromCents(product.price),
+        stock: product.stock,
+        description: product.description,
+        status: product.status,
+      }));
+    }
 
     if (body.productId) {
       const product = await this.productRepository.findOne({
@@ -70,6 +88,7 @@ export class AiService {
           stock: product.stock,
           description: product.description,
           status: product.status,
+          image: product.image,
         };
       }
     }

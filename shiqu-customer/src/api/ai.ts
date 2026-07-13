@@ -1,6 +1,11 @@
 import request from './request'
 
-export type AiScene = 'product_qa' | 'order_help' | 'assistant'
+export type AiScene =
+  | 'product_qa'
+  | 'order_help'
+  | 'assistant'
+  | 'product_recommend'
+  | 'grass_copy'
 
 export interface AiChatPayload {
   message: string

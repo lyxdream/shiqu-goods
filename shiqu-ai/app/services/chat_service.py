@@ -1,5 +1,6 @@
-from app.schemas import ChatRequest
+from app.schemas import ChatRequest, ChatResult
 from app.services import session_store
+from app.services import grass_copy_service, recommend_service
 
 ORDER_STATUS_LABEL = {
     "pending_payment": "待付款",
@@ -116,9 +117,23 @@ def _order_help(req: ChatRequest) -> str:
     ask_pay = any(k in text for k in ("付款", "支付", "怎么付", "模拟付款"))
     ask_cancel = any(k in text for k in ("取消", "退款", "售后"))
     ask_address = any(k in text for k in ("地址", "收货"))
-    ask_howto = any(k in text for k in ("怎么下单", "如何下单", "下单步骤", "下单流程"))
+    ask_howto = any(
+        k in text
+        for k in (
+            "怎么下单",
+            "如何下单",
+            "下单步骤",
+            "下单流程",
+            "购物流程",
+            "购买流程",
+            "怎么买",
+            "如何购买",
+            "购物步骤",
+            "怎么购物",
+        )
+    )
     ask_register = any(k in text for k in ("注册", "登录", "密码"))
-    ask_all = any(k in text for k in ("流程", "说明", "帮助", "指南", "全部", "都有哪些"))
+    ask_all = any(k in text for k in ("说明", "帮助", "指南", "全部", "都有哪些", "能做什么"))
 
     if ask_status:
         if ctx:
@@ -167,11 +182,13 @@ def _order_help(req: ChatRequest) -> str:
 
     if ask_howto:
         return (
-            "下单步骤：\n"
-            "1. 打开商品详情，选择数量\n"
-            "2. 选择自提地址\n"
-            "3. 提交订单（无购物车，提交即扣库存）\n"
-            "4. 在订单详情「模拟付款」"
+            "拾趣好物购物流程：\n"
+            "1. 浏览首页商品，进入详情页\n"
+            "2. 选择购买数量，并选择自提地址\n"
+            "3. 提交订单（本站无购物车，提交即扣库存）\n"
+            "4. 在订单详情点击「模拟付款」\n"
+            "5. 付款后按订单自提地址线下取货，完成后为「已自提」\n"
+            "也可以问我：怎么填地址、怎么付款、订单状态、自提规则。"
         )
 
     if ask_register:
@@ -198,35 +215,66 @@ def _order_help(req: ChatRequest) -> str:
     )
 
 
-def _assistant(req: ChatRequest) -> str:
-    text = req.message
-    if any(
+def _is_recommend_intent(text: str) -> bool:
+    return any(
         k in text
-        for k in ("订单", "自提", "付款", "地址", "注册", "登录", "下单", "状态", "退款")
-    ):
-        return _order_help(req)
-    if any(k in text for k in ("推荐", "种草", "清单", "搭配")):
-        return (
-            "选购推荐、种草文案、采购清单属于后续能力，当前暂未开放。\n"
-            "现在可以为你解答商品问题（请从详情页进入）或订单/购物流程问题。"
-        )
-    return (
-        "你好，我是拾趣好物购物助手。\n"
-        "可以帮你：商品答疑（从详情页进入）、订单状态与购物流程问题。\n"
-        "直接说出你的问题即可。"
+        for k in ("推荐", "有什么", "买点", "礼物", "搭配", "适合", "送", "想买")
     )
 
 
-def chat(req: ChatRequest) -> str:
+def _assistant(req: ChatRequest) -> ChatResult:
+    text = req.message
+    if _is_recommend_intent(text) and not any(
+        k in text for k in ("流程", "订单", "下单", "付款", "自提")
+    ):
+        return recommend_service.recommend(req)
+    if any(
+        k in text
+        for k in (
+            "订单",
+            "自提",
+            "付款",
+            "支付",
+            "地址",
+            "注册",
+            "登录",
+            "下单",
+            "状态",
+            "退款",
+            "取消",
+            "购物",
+            "流程",
+            "怎么买",
+            "如何购买",
+            "帮助",
+            "指南",
+        )
+    ):
+        return ChatResult(reply=_order_help(req), product_ids=[])
+    return ChatResult(
+        reply=(
+            "你好，我是拾趣好物购物助手。\n"
+            "可以帮你：商品推荐、商品答疑（从详情页进入）、订单与购物流程问题。\n"
+            "直接说出你的问题即可，例如「购物流程」或「推荐个200以内的礼物」。"
+        ),
+        product_ids=[],
+    )
+
+
+def chat(req: ChatRequest) -> ChatResult:
     scene = (req.scene or "assistant").strip()
     session_store.append_message(req.session_id, "user", req.message)
 
     if scene == "product_qa":
-        reply = _product_qa(req)
+        result = ChatResult(reply=_product_qa(req), product_ids=[])
     elif scene == "order_help":
-        reply = _order_help(req)
+        result = ChatResult(reply=_order_help(req), product_ids=[])
+    elif scene == "product_recommend":
+        result = recommend_service.recommend(req)
+    elif scene == "grass_copy":
+        result = grass_copy_service.generate(req)
     else:
-        reply = _assistant(req)
+        result = _assistant(req)
 
-    session_store.append_message(req.session_id, "assistant", reply)
-    return reply
+    session_store.append_message(req.session_id, "assistant", result.reply)
+    return result

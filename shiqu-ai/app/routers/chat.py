@@ -8,10 +8,10 @@ router = APIRouter(tags=["chat"])
 
 @router.post("/chat", response_model=ChatResponse)
 def chat(body: ChatRequest):
-    reply = chat_service.chat(body)
+    result = chat_service.chat(body)
     return ChatResponse(
-        reply=reply,
+        reply=result.reply,
         sessionId=body.session_id,
         scene=body.scene or "assistant",
-        productIds=[],  # MVP 不做推荐；后续强制仅返回站内商品 ID
+        productIds=result.product_ids,
     )

@@ -33,8 +33,15 @@ shiqu-ai/
 | 路径 | 文件 | 状态 |
 |------|------|------|
 | `GET /health` | `routers/health.py` | 可用 |
-| `POST /chat` | `routers/chat.py` + `services/chat_service.py` | MVP（`product_qa` / `order_help` / `assistant`） |
+| `POST /chat` | `routers/chat.py` + `services/chat_service.py` | MVP + 推荐 / 种草 |
 | `POST /document/parse` | `routers/document.py` + `services/document_service.py` | 预留，未实现 |
+
+推荐相关服务：
+
+| 文件 | 说明 |
+|------|------|
+| `services/recommend_service.py` | 站内商品推荐，**仅返回 context.products 中的 ID** |
+| `services/grass_copy_service.py` | 基于单商品 context 生成种草文案 |
 
 ## 端口
 
@@ -77,8 +84,10 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 1. **商品智能答疑**（`scene=product_qa`）：依赖 Nest 注入的商品上下文
 2. **购物流程 & 订单答疑**（`scene=order_help` / `assistant`）
+3. **站内商品推荐**（`scene=product_recommend` / `assistant` 内识别推荐意图）：依赖 Nest 注入 `context.products`，响应 `productIds` **仅允许站内 ID**
+4. **种草文案**（`scene=grass_copy`）：依赖 Nest 注入 `context.product`，C 端从商品详情「AI 种草文案」进入
 
-后续能力（推荐 / 种草 / 采购清单）未实现。推荐类上线时**强制只返回站内商品 ID**，禁止编造站外商品。
+采购清单等能力未实现。
 
 ## 与业务数据
 

@@ -21,7 +21,7 @@
       <van-cell title="收货地址" is-link to="/addresses" />
       <van-cell
         title="购物 AI 助手"
-        label="购物流程、自提与订单问题"
+        label="商品推荐、购物流程与订单问题"
         is-link
         to="/ai/chat?scene=assistant"
       />
