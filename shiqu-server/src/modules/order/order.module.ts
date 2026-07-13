@@ -9,6 +9,7 @@ import { OrderController } from './order.controller';
 import { OrderItem } from './entities/order-item.entity';
 import { Order } from './entities/order.entity';
 import { OrderService } from './order.service';
+import { OrderTaskService } from './order-task.service';
 
 @Module({
   imports: [
@@ -18,6 +19,6 @@ import { OrderService } from './order.service';
     BizNoModule,
   ],
   controllers: [OrderController, OrderAdminController],
-  providers: [OrderService],
+  providers: [OrderService, OrderTaskService],
 })
 export class OrderModule {}
