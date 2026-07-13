@@ -146,11 +146,40 @@ export class OrderService {
   }
 
   async updateStatus(id: number, dto: UpdateOrderStatusDto) {
-    const order = await this.findOneForAdmin(id);
+    const order = await this.orderRepository.findOne({
+      where: { id },
+      relations: ['items'],
+    });
+    if (!order) {
+      throw new NotFoundException('订单不存在');
+    }
     this.assertTransition(order.status, dto.status);
-    order.status = dto.status;
-    await this.orderRepository.save(order);
-    return mapOrderToApi(order);
+
+    if (dto.status === OrderStatusEnum.CANCELLED) {
+      // 取消订单：在事务内原子地回滚库存 + 更新状态
+      await this.dbService.transaction(async (manager) => {
+        for (const item of order.items) {
+          // 用增量 SQL 更新，天然原子，避免并发超加库存
+          await manager
+            .createQueryBuilder()
+            .update(Product)
+            .set({ stock: () => `stock + ${item.quantity}` })
+            .where('id = :id', { id: item.productId })
+            .execute();
+        }
+        order.status = dto.status;
+        await manager.save(order);
+      });
+    } else {
+      order.status = dto.status;
+      await this.orderRepository.save(order);
+    }
+
+    const updated = await this.orderRepository.findOne({
+      where: { id },
+      relations: ['items'],
+    });
+    return mapOrderToApi(updated!);
   }
 
   private assertTransition(from: OrderStatusEnum, to: OrderStatusEnum) {
