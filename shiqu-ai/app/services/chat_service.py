@@ -1,7 +1,26 @@
+import re
+
+from app.config import settings
 from app.schemas import ChatRequest, ChatResult
-from app.services import session_store
+from app.services import llm_service, session_store
 from app.services import grass_copy_service, purchase_list_service, recommend_service
+from app.services import prompt_builder
+from app.services.recommend_service import validate_product_ids, _eligible_products
 from app.utils import format_price_yuan
+
+
+def _strip_markdown(text: str) -> str:
+    """剥离 LLM 可能输出的 Markdown 标记，保留纯文本。"""
+    # 去掉代码块（```...```）
+    text = re.sub(r"```[\s\S]*?```", "", text)
+    # 去掉加粗/斜体 **x** / *x* / __x__
+    text = re.sub(r"\*{1,3}(.*?)\*{1,3}", r"\1", text)
+    text = re.sub(r"_{1,2}(.*?)_{1,2}", r"\1", text)
+    # 去掉标题符号 ## xxx
+    text = re.sub(r"^#{1,6}\s+", "", text, flags=re.MULTILINE)
+    # 多余空行收缩
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
 
 ORDER_STATUS_LABEL = {
     "pending_payment": "待付款",
@@ -257,22 +276,96 @@ def _assistant(req: ChatRequest) -> ChatResult:
     )
 
 
+def _chat_llm(req: ChatRequest, scene: str) -> ChatResult | None:
+    """
+    LLM 分支：构建 system prompt 后调用大模型。
+    - 需要 productIds 的场景（product_recommend / purchase_list）使用 JSON 模式。
+    - 其余场景直接返回文本回复。
+    - 任何异常或 LLM 不可用时返回 None，由调用方降级到规则引擎。
+    """
+    context = req.context or {}
+    history = session_store.get_history(req.session_id)
+    system = prompt_builder.build(scene, context)
+
+    eligible = _eligible_products(context.get("products") or [])
+    allowed = {int(p["id"]) for p in eligible if p.get("id") is not None}
+    id_to_product = {int(p["id"]): p for p in eligible if p.get("id") is not None}
+
+    # 需要结构化 productIds 的场景（含 assistant 有商品列表时）
+    use_json = scene in ("product_recommend", "purchase_list") or (
+        scene == "assistant" and bool(eligible)
+    )
+    if use_json:
+        data = llm_service.ask_json(system, req.message, history)
+        if not data:
+            return None
+        reply = _strip_markdown(str(data.get("reply") or ""))
+        raw_ids: list = data.get("productIds") or []
+        product_ids = validate_product_ids(
+            [int(i) for i in raw_ids if str(i).isdigit()],
+            allowed,
+            limit=5,
+        )
+        products_brief = [
+            {"id": pid, "name": id_to_product[pid].get("name") or "商品", "price": id_to_product[pid].get("price")}
+            for pid in product_ids
+            if pid in id_to_product
+        ]
+        return ChatResult(reply=reply, product_ids=product_ids, products=products_brief)
+
+    reply = _strip_markdown(llm_service.ask(system, req.message, history) or "")
+    if not reply:
+        return None
+
+    # product_qa：上下文里就有商品，直接附商品卡片
+    product_ctx = context.get("product") or {}
+    pid = product_ctx.get("id")
+    if scene == "product_qa" and pid is not None:
+        try:
+            pid = int(pid)
+            brief = {"id": pid, "name": product_ctx.get("name") or "商品", "price": product_ctx.get("price")}
+            return ChatResult(reply=reply, product_ids=[pid], products=[brief])
+        except (ValueError, TypeError):
+            pass
+
+    return ChatResult(reply=reply, product_ids=[])
+
+
+def _chat_rule(req: ChatRequest, scene: str) -> ChatResult:
+    """规则引擎分支（原有逻辑）。"""
+    if scene == "product_qa":
+        product_ctx = ((req.context or {}).get("product") or {})
+        pid = product_ctx.get("id")
+        reply = _product_qa(req)
+        if pid is not None:
+            try:
+                pid = int(pid)
+                brief = {"id": pid, "name": product_ctx.get("name") or "商品", "price": product_ctx.get("price")}
+                return ChatResult(reply=reply, product_ids=[pid], products=[brief])
+            except (ValueError, TypeError):
+                pass
+        return ChatResult(reply=reply, product_ids=[])
+    if scene == "order_help":
+        return ChatResult(reply=_order_help(req), product_ids=[])
+    if scene == "product_recommend":
+        return recommend_service.recommend(req)
+    if scene == "grass_copy":
+        return grass_copy_service.generate(req)
+    if scene == "purchase_list":
+        return purchase_list_service.match(req)
+    return _assistant(req)
+
+
 def chat(req: ChatRequest) -> ChatResult:
     scene = (req.scene or "assistant").strip()
     session_store.append_message(req.session_id, "user", req.message)
 
-    if scene == "product_qa":
-        result = ChatResult(reply=_product_qa(req), product_ids=[])
-    elif scene == "order_help":
-        result = ChatResult(reply=_order_help(req), product_ids=[])
-    elif scene == "product_recommend":
-        result = recommend_service.recommend(req)
-    elif scene == "grass_copy":
-        result = grass_copy_service.generate(req)
-    elif scene == "purchase_list":
-        result = purchase_list_service.match(req)
-    else:
-        result = _assistant(req)
+    result: ChatResult | None = None
+    if settings.llm_enabled:
+        result = _chat_llm(req, scene)  # LLM 失败返回 None
+
+    if result is None:
+        result = _chat_rule(req, scene)  # 兜底：规则引擎
 
     session_store.append_message(req.session_id, "assistant", result.reply)
     return result

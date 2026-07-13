@@ -1,6 +1,6 @@
 import re
 
-from app.schemas import ChatRequest, ChatResult
+from app.schemas import ChatRequest, ChatResult, ProductBrief
 
 
 def _extract_max_budget(text: str) -> float | None:
@@ -129,14 +129,18 @@ def recommend(req: ChatRequest) -> ChatResult:
         )
 
     id_to_product = {int(p["id"]): p for p in products if p.get("id") is not None}
-    lines = ["根据你的需求，推荐以下站内商品："]
-    for index, product_id in enumerate(product_ids, start=1):
-        product = id_to_product.get(product_id, {})
-        name = product.get("name") or "商品"
-        price = product.get("price")
-        price_text = f"¥{float(price):.2f}" if price is not None else "价格见详情"
-        reason = product.get("description") or "在售现货，欢迎查看详情。"
-        lines.append(f"{index}. {name}（{price_text}）— {str(reason)[:60]}")
-    lines.append("点击下方卡片可查看商品详情。")
+    products_brief = [
+        ProductBrief(
+            id=pid,
+            name=id_to_product[pid].get("name") or "商品",
+            price=float(id_to_product[pid]["price"]) if id_to_product[pid].get("price") is not None else None,
+        )
+        for pid in product_ids
+        if pid in id_to_product
+    ]
 
-    return ChatResult(reply="\n".join(lines), product_ids=product_ids)
+    return ChatResult(
+        reply="根据你的需求，为你推荐以下站内商品，点击卡片可查看详情。",
+        product_ids=product_ids,
+        products=products_brief,
+    )

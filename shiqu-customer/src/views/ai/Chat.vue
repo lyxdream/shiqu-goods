@@ -12,17 +12,30 @@
               <span class="copy-link" @click="openPoster(msg.content)">生成海报</span>
             </div>
           </div>
-          <div v-if="msg.productIds?.length" class="product-links">
-            <van-button
+          <div v-if="msg.products?.length" class="product-cards">
+            <div
+              v-for="p in msg.products"
+              :key="p.id"
+              class="product-card"
+              @click="goProduct(p.id)"
+            >
+              <span class="product-card-name">{{ p.name }}</span>
+              <span class="product-card-price">
+                {{ p.price != null ? `¥${p.price.toFixed(2)}` : '价格见详情' }}
+              </span>
+              <van-icon name="arrow" class="product-card-arrow" />
+            </div>
+          </div>
+          <div v-else-if="msg.productIds?.length" class="product-cards">
+            <div
               v-for="id in msg.productIds"
               :key="id"
-              size="small"
-              type="primary"
-              plain
+              class="product-card"
               @click="goProduct(id)"
             >
-              查看推荐商品 #{{ id }}
-            </van-button>
+              <span class="product-card-name">商品 #{{ id }}</span>
+              <van-icon name="arrow" class="product-card-arrow" />
+            </div>
           </div>
         </div>
       </div>
@@ -57,7 +70,7 @@
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showToast } from 'vant'
-import { aiChat, type AiScene } from '@/api/ai'
+import { aiChat, type AiScene, type AiProductBrief } from '@/api/ai'
 import { getOrderDetail } from '@/api/order'
 import { getProductDetail } from '@/api/product'
 import GrassPoster from '@/components/GrassPoster.vue'
@@ -67,6 +80,7 @@ type ChatMessage = {
   role: 'user' | 'assistant'
   content: string
   productIds?: number[]
+  products?: AiProductBrief[]
   copyable?: boolean
 }
 
@@ -234,6 +248,7 @@ async function send() {
       role: 'assistant',
       content: data?.reply || '暂时没有得到有效回复',
       productIds: data?.productIds?.length ? data.productIds : undefined,
+      products: data?.products?.length ? data.products : undefined,
       copyable: scene.value === 'grass_copy',
     })
   } catch (err: unknown) {
@@ -330,11 +345,47 @@ async function send() {
   color: #fff;
 }
 
-.product-links {
+.product-cards {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   margin-top: 8px;
+}
+
+.product-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #f7f8fa;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.product-card:active {
+  background: #ebedf0;
+}
+
+.product-card-name {
+  flex: 1;
+  font-size: 14px;
+  color: #323233;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-card-price {
+  font-size: 14px;
+  color: #ee0a24;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.product-card-arrow {
+  font-size: 14px;
+  color: #969799;
 }
 
 .composer {

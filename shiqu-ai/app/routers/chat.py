@@ -14,4 +14,5 @@ def chat(body: ChatRequest):
         sessionId=body.session_id,
         scene=body.scene or "assistant",
         productIds=result.product_ids,
+        products=result.products,
     )

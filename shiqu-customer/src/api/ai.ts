@@ -16,11 +16,18 @@ export interface AiChatPayload {
   orderId?: number
 }
 
+export interface AiProductBrief {
+  id: number
+  name: string
+  price: number | null
+}
+
 export interface AiChatResult {
   reply: string
   sessionId?: string
   scene?: string
   productIds?: number[]
+  products?: AiProductBrief[]
 }
 
 export function aiChat(data: AiChatPayload) {

@@ -1,9 +1,16 @@
 from pydantic import BaseModel, Field
 
 
+class ProductBrief(BaseModel):
+    id: int
+    name: str
+    price: float | None = None
+
+
 class ChatResult(BaseModel):
     reply: str
     product_ids: list[int] = Field(default_factory=list, alias="productIds")
+    products: list[ProductBrief] = Field(default_factory=list)
 
     model_config = {"populate_by_name": True}
 
@@ -33,6 +40,7 @@ class ChatResponse(BaseModel):
     session_id: str | None = Field(default=None, alias="sessionId")
     scene: str | None = None
     product_ids: list[int] = Field(default_factory=list, alias="productIds")
+    products: list[ProductBrief] = Field(default_factory=list)
 
     model_config = {"populate_by_name": True, "by_alias": True}
 
