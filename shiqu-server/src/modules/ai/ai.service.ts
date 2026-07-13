@@ -155,10 +155,20 @@ export class AiService {
     return context;
   }
 
+  private get internalSecret(): string {
+    return this.configService.get<string>('ai.internalSecret') || '';
+  }
+
   private async forward(url: string, body: unknown): Promise<unknown> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (this.internalSecret) {
+      headers['x-internal-token'] = this.internalSecret;
+    }
     try {
       const { data } = await firstValueFrom(
-        this.httpService.post<unknown>(url, body),
+        this.httpService.post<unknown>(url, body, { headers }),
       );
       return data;
     } catch (err: unknown) {
