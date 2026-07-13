@@ -16,7 +16,7 @@ export class AiChatDto {
   @ApiProperty({
     required: false,
     description:
-      '场景：product_qa | order_help | assistant | product_recommend | grass_copy',
+      '场景：product_qa | order_help | assistant | product_recommend | grass_copy | purchase_list',
   })
   @IsOptional()
   @IsString()

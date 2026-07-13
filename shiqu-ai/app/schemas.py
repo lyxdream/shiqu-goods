@@ -15,7 +15,7 @@ class ChatRequest(BaseModel):
         default="assistant",
         description=(
             "product_qa | order_help | assistant | "
-            "product_recommend | grass_copy"
+            "product_recommend | grass_copy | purchase_list"
         ),
     )
     product_id: int | None = Field(default=None, alias="productId")

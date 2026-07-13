@@ -90,7 +90,8 @@ const scene = computed<AiScene>(() => {
     s === 'order_help' ||
     s === 'assistant' ||
     s === 'product_recommend' ||
-    s === 'grass_copy'
+    s === 'grass_copy' ||
+    s === 'purchase_list'
   ) {
     return s
   }
@@ -114,6 +115,7 @@ const pageTitle = computed(() => {
   if (scene.value === 'order_help') return '订单问题咨询'
   if (scene.value === 'grass_copy') return 'AI 种草文案'
   if (scene.value === 'product_recommend') return '商品推荐'
+  if (scene.value === 'purchase_list') return '采购清单凑单'
   return '购物 AI 助手'
 })
 
@@ -136,6 +138,9 @@ const hint = computed(() => {
   if (scene.value === 'product_recommend' || scene.value === 'assistant') {
     return '可描述需求或预算，例如「推荐个200以内的礼物」'
   }
+  if (scene.value === 'purchase_list') {
+    return '输入采购清单，例如：平板电脑、蓝牙耳机、机械键盘'
+  }
   return ''
 })
 
@@ -149,7 +154,9 @@ onMounted(async () => {
           ? '你好，我可以帮你写种草文案。直接发送，或说明要朋友圈/小红书/简短风格。'
           : scene.value === 'product_recommend'
             ? '你好，告诉我你的需求或预算，我会从站内商品里为你推荐。'
-            : '你好，我是购物 AI 助手。可以问商品推荐、购物流程或订单问题。'
+            : scene.value === 'purchase_list'
+              ? '你好，请输入你的采购清单，例如：\n平板电脑、蓝牙耳机、机械键盘\n\n我会逐项对照站内在售商品，告诉你哪些可以买到、并给出合计参考价。'
+              : '你好，我是购物 AI 助手。可以问商品推荐、购物流程或订单问题。'
   messages.value.push({ role: 'assistant', content: greet })
 
   try {

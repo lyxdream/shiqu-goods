@@ -6,6 +6,7 @@ export type AiScene =
   | 'assistant'
   | 'product_recommend'
   | 'grass_copy'
+  | 'purchase_list'
 
 export interface AiChatPayload {
   message: string

@@ -59,7 +59,7 @@ export class AiService {
     const context: Record<string, unknown> = {};
     const scene = body.scene || this.inferScene(body);
 
-    if (scene === 'product_recommend' || scene === 'assistant') {
+    if (scene === 'product_recommend' || scene === 'assistant' || scene === 'purchase_list') {
       const products = await this.productRepository.find({
         where: { status: ProductStatusEnum.ON_SALE },
         order: { createdAt: 'DESC' },

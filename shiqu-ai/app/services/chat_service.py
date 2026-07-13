@@ -1,6 +1,6 @@
 from app.schemas import ChatRequest, ChatResult
 from app.services import session_store
-from app.services import grass_copy_service, recommend_service
+from app.services import grass_copy_service, purchase_list_service, recommend_service
 
 ORDER_STATUS_LABEL = {
     "pending_payment": "待付款",
@@ -273,6 +273,8 @@ def chat(req: ChatRequest) -> ChatResult:
         result = recommend_service.recommend(req)
     elif scene == "grass_copy":
         result = grass_copy_service.generate(req)
+    elif scene == "purchase_list":
+        result = purchase_list_service.match(req)
     else:
         result = _assistant(req)
 

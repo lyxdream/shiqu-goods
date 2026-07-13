@@ -25,6 +25,12 @@
         is-link
         to="/ai/chat?scene=assistant"
       />
+      <van-cell
+        title="采购清单凑单"
+        label="输入清单，对照站内商品一键凑单"
+        is-link
+        to="/ai/chat?scene=purchase_list"
+      />
     </van-cell-group>
 
     <div class="actions">
