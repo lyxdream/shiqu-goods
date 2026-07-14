@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { login as loginApi, register as registerApi } from '@/api/auth'
+import { login as loginApi, logout as logoutApi, register as registerApi } from '@/api/auth'
 import { getProfile } from '@/api/user'
 import type { UserProfile } from '@/types'
 import { tokenStorage, usernameStorage } from '@/utils/storage'
@@ -38,7 +38,12 @@ export const useUserStore = defineStore('user', () => {
     return profile.value
   }
 
-  function logout() {
+  async function logout() {
+    try {
+      await logoutApi()
+    } catch {
+      // 即使服务端调用失败也继续清本地状态
+    }
     token.value = ''
     username.value = ''
     profile.value = null

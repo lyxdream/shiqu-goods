@@ -38,6 +38,27 @@ export class RedisService {
     await this.client.expire(key, ttlSeconds);
   }
 
+  /** Sorted Set：添加成员，score 为过期时间戳（秒） */
+  async zadd(key: string, score: number, member: string): Promise<void> {
+    await this.client.zadd(key, score, member);
+  }
+
+  /** Sorted Set：获取成员的 score，不存在返回 null */
+  async zscore(key: string, member: string): Promise<number | null> {
+    const val = await this.client.zscore(key, member);
+    return val === null ? null : parseFloat(val);
+  }
+
+  /** Sorted Set：移除指定成员 */
+  async zrem(key: string, member: string): Promise<void> {
+    await this.client.zrem(key, member);
+  }
+
+  /** Sorted Set：移除 score 在 [min, max] 范围内的所有成员（用于清理过期 jti） */
+  async zremrangebyscore(key: string, min: number, max: number): Promise<void> {
+    await this.client.zremrangebyscore(key, min, max);
+  }
+
   /** 获取原始 ioredis 实例（供 ThrottlerStorage 使用） */
   getClient(): Redis {
     return this.client;

@@ -8,6 +8,7 @@ import { ResponseCode } from 'src/common/constants/response-code';
 import { BusinessException } from 'src/common/exceptions/business.exception';
 import { UserStatusEnum } from 'src/common/enums';
 import type { JwtUserPayload } from 'src/common/types/jwt-payload';
+import { RedisService } from 'src/shared/redis/redis.service';
 import { User } from 'src/modules/user/entities/user.entity';
 
 @Injectable()
@@ -16,6 +17,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     configService: ConfigService,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly redisService: RedisService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -28,6 +30,19 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     if (payload.type !== 'user') {
       throw new BusinessException(ResponseCode.UNAUTHORIZED, '无效的令牌');
     }
+
+    // 白名单校验：jti 不在集合里说明已退出登录或改密后被吊销
+    const score = await this.redisService.zscore(
+      `token:user:${payload.sub}`,
+      payload.jti,
+    );
+    if (score === null) {
+      throw new BusinessException(
+        ResponseCode.UNAUTHORIZED,
+        '登录已失效，请重新登录',
+      );
+    }
+
     const user = await this.userRepository.findOne({
       where: { id: payload.sub },
     });

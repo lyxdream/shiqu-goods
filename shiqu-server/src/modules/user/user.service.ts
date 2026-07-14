@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { comparePassword, hashPassword } from 'src/common/utils/bcrypt.util';
+import { RedisService } from 'src/shared/redis/redis.service';
 import { User } from './entities/user.entity';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -15,6 +16,7 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly redisService: RedisService,
   ) {}
 
   async getProfile(userId: number) {
@@ -44,6 +46,8 @@ export class UserService {
     }
     user.password = await hashPassword(dto.newPassword);
     await this.userRepository.save(user);
+    // 修改密码后吊销所有设备的 Token
+    await this.redisService.del(`token:user:${userId}`);
     return null;
   }
 

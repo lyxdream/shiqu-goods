@@ -26,3 +26,7 @@ export function resetPassword(data: {
 }) {
   return request.post<never, null>('/api/auth/forgot-password/reset', data)
 }
+
+export function logout() {
+  return request.post<never, null>('/api/auth/logout')
+}

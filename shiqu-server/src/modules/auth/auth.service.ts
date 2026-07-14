@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -30,6 +31,7 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
     private readonly redisService: RedisService,
+    private readonly configService: ConfigService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -70,6 +72,7 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
+
     const user = await this.userRepository
       .createQueryBuilder('user')
       .addSelect('user.password')
@@ -190,19 +193,43 @@ export class AuthService {
 
     await this.redisService.del(otpKey);
     await this.redisService.del(lockKey);
+    await this.revokeAllTokens(user.id);
 
     return null;
   }
 
-  private buildToken(user: User) {
+  private async buildToken(user: User) {
+    const jti = crypto.randomUUID();
+    const expiresInSeconds = this.configService.get<number>('jwt.expiresInSeconds')!;
+    const whitelistTtl = this.configService.get<number>('jwt.whitelistTtl')!;
+    const now = Math.floor(Date.now() / 1000);
+    const expiry = now + expiresInSeconds;
+    const whitelistKey = `token:user:${user.id}`;
+
+    // 清理已过期的 jti，再写入新 jti，最后刷新兜底 TTL
+    await this.redisService.zremrangebyscore(whitelistKey, 0, now);
+    await this.redisService.zadd(whitelistKey, expiry, jti);
+    await this.redisService.expire(whitelistKey, whitelistTtl);
+
     const payload: JwtUserPayload = {
       sub: user.id,
       username: user.username,
       type: 'user',
+      jti,
     };
     return {
       accessToken: this.jwtService.sign(payload),
     };
+  }
+
+  /** 退出登录：从白名单移除当前 jti */
+  async logout(userId: number, jti: string): Promise<void> {
+    await this.redisService.zrem(`token:user:${userId}`, jti);
+  }
+
+  /** 强制该用户所有设备下线（改密/重置密码时调用） */
+  private async revokeAllTokens(userId: number): Promise<void> {
+    await this.redisService.del(`token:user:${userId}`);
   }
 
   private generateOtp(): string {

@@ -2,6 +2,7 @@ export interface JwtUserPayload {
   sub: number;
   username: string;
   type: 'user';
+  jti: string;
 }
 
 export interface JwtAdminPayload {
