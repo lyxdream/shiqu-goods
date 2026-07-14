@@ -25,6 +25,16 @@ export class UserService {
 
   async updateProfile(userId: number, dto: UpdateProfileDto) {
     const user = await this.findById(userId);
+
+    if (dto.phone) {
+      const existing = await this.userRepository.findOne({
+        where: { phone: dto.phone },
+      });
+      if (existing && existing.id !== userId) {
+        throw new BadRequestException('该手机号已被使用');
+      }
+    }
+
     Object.assign(user, dto);
     return this.userRepository.save(user);
   }

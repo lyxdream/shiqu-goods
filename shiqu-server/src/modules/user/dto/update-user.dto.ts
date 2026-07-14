@@ -1,7 +1,6 @@
 import { Transform } from 'class-transformer';
-import { IsEnum, IsOptional, IsString, Length } from 'class-validator';
+import { IsOptional, IsString, Length, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { UserStatusEnum } from 'src/common/enums';
 
 const emptyToUndefined = ({ value }: { value: unknown }) => {
   if (value === null || value === undefined) return undefined;
@@ -27,11 +26,6 @@ export class UpdateUserDto {
   @Transform(emptyToUndefined)
   @IsOptional()
   @IsString()
-  @Length(1, 20)
+  @Matches(/^1\d{10}$/, { message: '手机号格式不正确' })
   phone?: string;
-
-  @ApiProperty({ required: false, description: '状态', enum: UserStatusEnum })
-  @IsOptional()
-  @IsEnum(UserStatusEnum)
-  status?: UserStatusEnum;
 }

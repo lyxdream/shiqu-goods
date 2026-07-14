@@ -1,11 +1,6 @@
-import {
-  IsNotEmpty,
-  IsString,
-  Length,
-  Matches,
-  MinLength,
-} from 'class-validator';
+import { IsNotEmpty, IsString, Length, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsStrongPassword } from 'src/common/validators/password.validator';
 
 export class RegisterDto {
   @ApiProperty({ description: '用户名' })
@@ -20,13 +15,13 @@ export class RegisterDto {
   @ApiProperty({ description: '手机号' })
   @IsString()
   @IsNotEmpty()
-  @Matches(/^1\d{10}$/, { message: '请输入正确的手机号' })
+  @Matches(/^1\d{10}$/, { message: '手机号格式不正确' })
   phone: string;
 
-  @ApiProperty({ description: '密码' })
+  @ApiProperty({ description: '密码（8-12 位，须包含数字、大写、小写、下划线中至少三种）' })
   @IsString()
   @IsNotEmpty()
-  @MinLength(6)
+  @IsStrongPassword()
   password: string;
 
   @ApiProperty({ description: '确认密码' })

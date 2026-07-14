@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsOptional, IsString, Length } from 'class-validator';
+import { IsOptional, IsString, Length, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 const emptyToUndefined = ({ value }: { value: unknown }) => {
@@ -26,6 +26,6 @@ export class UpdateProfileDto {
   @Transform(emptyToUndefined)
   @IsOptional()
   @IsString()
-  @Length(1, 20)
+  @Matches(/^1\d{10}$/, { message: '手机号格式不正确' })
   phone?: string;
 }
