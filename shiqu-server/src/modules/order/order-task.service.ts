@@ -41,6 +41,23 @@ export class OrderTaskService {
     for (const order of expiredOrders) {
       try {
         await this.dbService.transaction(async (manager) => {
+          // 条件更新状态：只有仍为 pending_payment 才执行取消
+          // 防止扫描到订单后、事务执行前用户已完成支付的竞态
+          const result = await manager
+            .createQueryBuilder()
+            .update(Order)
+            .set({ status: OrderStatusEnum.CANCELLED })
+            .where('id = :id AND status = :status', {
+              id: order.id,
+              status: OrderStatusEnum.PENDING_PAYMENT,
+            })
+            .execute();
+
+          if (!result.affected) {
+            // 订单已被支付或其他状态，跳过库存回滚
+            return;
+          }
+
           for (const item of order.items) {
             await manager
               .createQueryBuilder()
@@ -49,8 +66,6 @@ export class OrderTaskService {
               .where('id = :id', { id: item.productId })
               .execute();
           }
-          order.status = OrderStatusEnum.CANCELLED;
-          await manager.save(order);
         });
         this.logger.log(`订单 ${order.orderNo} 已超时取消，库存已回滚`);
       } catch (err) {

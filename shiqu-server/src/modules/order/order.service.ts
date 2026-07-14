@@ -99,11 +99,31 @@ export class OrderService {
   }
 
   async pay(userId: number, orderId: number) {
+    // 先校验订单归属和当前状态（不加锁，仅做前置校验）
     const order = await this.findOwned(userId, orderId);
     this.assertTransition(order.status, OrderStatusEnum.PAID);
-    order.status = OrderStatusEnum.PAID;
-    await this.orderRepository.save(order);
-    return mapOrderToApi(order);
+
+    // 条件更新：只有当前仍为 pending_payment 时才能改为 paid
+    // 防止与超时取消 Cron 产生竞态（两者都写时，后到的 affectedRows=0 即失败）
+    const result = await this.orderRepository
+      .createQueryBuilder()
+      .update(Order)
+      .set({ status: OrderStatusEnum.PAID })
+      .where('id = :id AND status = :status', {
+        id: orderId,
+        status: OrderStatusEnum.PENDING_PAYMENT,
+      })
+      .execute();
+
+    if (!result.affected) {
+      throw new BadRequestException('订单状态已变更，支付失败，请刷新后重试');
+    }
+
+    const updated = await this.orderRepository.findOne({
+      where: { id: orderId },
+      relations: ['items'],
+    });
+    return mapOrderToApi(updated!);
   }
 
   async findAllForUser(userId: number) {
@@ -156,10 +176,23 @@ export class OrderService {
     this.assertTransition(order.status, dto.status);
 
     if (dto.status === OrderStatusEnum.CANCELLED) {
-      // 取消订单：在事务内原子地回滚库存 + 更新状态
       await this.dbService.transaction(async (manager) => {
+        // 条件更新状态：只有仍为 pending_payment 才能取消，防止与 pay() 竞态
+        const result = await manager
+          .createQueryBuilder()
+          .update(Order)
+          .set({ status: OrderStatusEnum.CANCELLED })
+          .where('id = :id AND status = :status', {
+            id: order.id,
+            status: OrderStatusEnum.PENDING_PAYMENT,
+          })
+          .execute();
+
+        if (!result.affected) {
+          throw new BadRequestException('订单状态已变更，无法取消');
+        }
+
         for (const item of order.items) {
-          // 用增量 SQL 更新，天然原子，避免并发超加库存
           await manager
             .createQueryBuilder()
             .update(Product)
@@ -167,8 +200,6 @@ export class OrderService {
             .where('id = :id', { id: item.productId })
             .execute();
         }
-        order.status = dto.status;
-        await manager.save(order);
       });
     } else {
       order.status = dto.status;
