@@ -101,28 +101,30 @@ export class AuthService {
   }
 
   /**
-   * 发送忘记密码验证码。
-   * 无论手机号是否注册，统一返回相同响应，防止用户枚举。
+   * 发送忘记密码验证码。手机号未注册时明确提示，已注册则发送验证码。
    */
   async sendOtp(dto: SendOtpDto) {
     const phone = dto.phone.trim();
 
     const user = await this.userRepository.findOne({ where: { phone } });
 
-    if (user && user.status !== UserStatusEnum.DISABLED) {
-      const code = this.generateOtp();
-      await this.redisService.set(`otp:phone:${phone}`, code, OTP_TTL);
-      // 清空历史错误计数
-      await this.redisService.del(`otp:fail:${phone}`);
-
-      // TODO: 接入真实短信服务商后，替换下面这行为 SMS SDK 调用
-      this.logger.log(
-        `[短信 Mock] 手机号 ${phone} 验证码：${code}（${OTP_TTL / 60} 分钟内有效）`,
-      );
+    if (!user) {
+      throw new BusinessException(ResponseCode.NOT_FOUND, '该手机号未注册，请先注册');
+    }
+    if (user.status === UserStatusEnum.DISABLED) {
+      throw new BusinessException(ResponseCode.ACCOUNT_DISABLED, '账号已被禁用');
     }
 
-    // 统一返回，不暴露手机号是否已注册
-    return { message: '如果该手机号已注册，验证码将在几秒内发送' };
+    const code = this.generateOtp();
+    await this.redisService.set(`otp:phone:${phone}`, code, OTP_TTL);
+    await this.redisService.del(`otp:fail:${phone}`);
+
+    // TODO: 接入真实短信服务商后，替换下面这行为 SMS SDK 调用
+    this.logger.log(
+      `[短信 Mock] 手机号 ${phone} 验证码：${code}（${OTP_TTL / 60} 分钟内有效）`,
+    );
+
+    return { message: '验证码已发送，请在 5 分钟内完成验证' };
   }
 
   /**
