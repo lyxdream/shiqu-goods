@@ -163,9 +163,7 @@ export class AiService {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-    if (this.internalSecret) {
-      headers['x-internal-token'] = this.internalSecret;
-    }
+    headers['x-internal-token'] = this.internalSecret;
     try {
       const { data } = await firstValueFrom(
         this.httpService.post<unknown>(url, body, { headers }),
