@@ -5,7 +5,7 @@ export class InitSchema1720000000000 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
-      CREATE TABLE \`users\` (
+      CREATE TABLE IF NOT EXISTS \`users\` (
         \`id\`         int          NOT NULL AUTO_INCREMENT,
         \`created_at\` datetime(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
         \`updated_at\` datetime(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
@@ -21,7 +21,7 @@ export class InitSchema1720000000000 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE \`admins\` (
+      CREATE TABLE IF NOT EXISTS \`admins\` (
         \`id\`         int          NOT NULL AUTO_INCREMENT,
         \`created_at\` datetime(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
         \`updated_at\` datetime(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
@@ -33,7 +33,7 @@ export class InitSchema1720000000000 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE \`biz_sequences\` (
+      CREATE TABLE IF NOT EXISTS \`biz_sequences\` (
         \`name\`  varchar(32) NOT NULL,
         \`value\` bigint      NOT NULL DEFAULT 0,
         PRIMARY KEY (\`name\`)
@@ -41,7 +41,7 @@ export class InitSchema1720000000000 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE \`products\` (
+      CREATE TABLE IF NOT EXISTS \`products\` (
         \`id\`          int          NOT NULL AUTO_INCREMENT,
         \`created_at\`  datetime(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
         \`updated_at\`  datetime(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
@@ -59,7 +59,7 @@ export class InitSchema1720000000000 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE \`addresses\` (
+      CREATE TABLE IF NOT EXISTS \`addresses\` (
         \`id\`           int         NOT NULL AUTO_INCREMENT,
         \`created_at\`   datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
         \`updated_at\`   datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
@@ -74,7 +74,7 @@ export class InitSchema1720000000000 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE \`orders\` (
+      CREATE TABLE IF NOT EXISTS \`orders\` (
         \`id\`             int         NOT NULL AUTO_INCREMENT,
         \`created_at\`     datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
         \`updated_at\`     datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
@@ -93,7 +93,7 @@ export class InitSchema1720000000000 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE \`order_items\` (
+      CREATE TABLE IF NOT EXISTS \`order_items\` (
         \`id\`           int         NOT NULL AUTO_INCREMENT,
         \`created_at\`   datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
         \`updated_at\`   datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
