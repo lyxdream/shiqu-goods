@@ -24,18 +24,20 @@ async function seed() {
   const finalPassword = password || defaultPassword;
 
   if (!isProduction && !finalPassword) {
-    console.error('[seed] 请在 .env 中设置 SEED_ADMIN_PASSWORD_DEFAULT，或通过 SEED_ADMIN_PASSWORD 传入密码');
+    console.error(
+      '[seed] 请在 .env 中设置 SEED_ADMIN_PASSWORD_DEFAULT，或通过 SEED_ADMIN_PASSWORD 传入密码',
+    );
     process.exit(1);
   }
 
   if (!isProduction && !password) {
-    console.warn('[seed] 未设置 SEED_ADMIN_PASSWORD，使用 SEED_ADMIN_PASSWORD_DEFAULT（仅限开发环境）');
+    console.warn(
+      '[seed] 未设置 SEED_ADMIN_PASSWORD，使用 SEED_ADMIN_PASSWORD_DEFAULT（仅限开发环境）',
+    );
   }
 
   const app = await NestFactory.createApplicationContext(AppModule);
-  const adminRepository = app.get<Repository<Admin>>(
-    getRepositoryToken(Admin),
-  );
+  const adminRepository = app.get<Repository<Admin>>(getRepositoryToken(Admin));
 
   const exists = await adminRepository.findOne({ where: { username } });
 

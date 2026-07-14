@@ -1,5 +1,6 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -11,6 +12,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @Throttle({ auth: { ttl: 60_000, limit: 5 } })
   @ApiOperation({ summary: '用户注册' })
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
@@ -18,6 +20,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ auth: { ttl: 60_000, limit: 5 } })
   @ApiOperation({ summary: '用户登录' })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
@@ -25,6 +28,7 @@ export class AuthController {
 
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ auth: { ttl: 60_000, limit: 5 } })
   @ApiOperation({ summary: '忘记密码（用户名 + 绑定手机号验证）' })
   forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto);

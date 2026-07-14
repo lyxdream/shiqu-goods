@@ -5,7 +5,8 @@ import {
   RequestMethod,
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ApiHostMiddleware } from 'src/common/middleware/api-host.middleware';
 import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
 import { TransformInterceptor } from 'src/common/interceptors/transform.interceptor';
@@ -32,6 +33,23 @@ import { AppController } from './app.controller';
       isGlobal: true,
       load: [appConfig, databaseConfig, jwtConfig, uploadConfig, aiConfig],
     }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'auth',    // 认证类：IP 限流，5次/60s
+        ttl: 60_000,
+        limit: 5,
+      },
+      {
+        name: 'ai',      // AI 类：用户 ID 限流，20次/60s
+        ttl: 60_000,
+        limit: 20,
+      },
+      {
+        name: 'default', // 全局兜底：IP 限流，120次/60s
+        ttl: 60_000,
+        limit: 120,
+      },
+    ]),
     DbModule,
     LoggerModule,
     AuthModule,
@@ -52,6 +70,10 @@ import { AppController } from './app.controller';
     {
       provide: APP_INTERCEPTOR,
       useClass: TransformInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })
