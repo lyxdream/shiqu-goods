@@ -19,12 +19,17 @@ async function seed() {
     process.exit(1);
   }
 
-  // 非生产环境未传密码时使用默认值（仅本地开发，值来自 .env 的 SEED_ADMIN_PASSWORD_DEFAULT）
-  const defaultPassword = process.env.SEED_ADMIN_PASSWORD_DEFAULT || 'admin123';
+  // 非生产环境未传密码时从 .env 读取默认值（SEED_ADMIN_PASSWORD_DEFAULT）
+  const defaultPassword = process.env.SEED_ADMIN_PASSWORD_DEFAULT || '';
   const finalPassword = password || defaultPassword;
 
+  if (!isProduction && !finalPassword) {
+    console.error('[seed] 请在 .env 中设置 SEED_ADMIN_PASSWORD_DEFAULT，或通过 SEED_ADMIN_PASSWORD 传入密码');
+    process.exit(1);
+  }
+
   if (!isProduction && !password) {
-    console.warn(`[seed] 未设置 SEED_ADMIN_PASSWORD，使用默认密码（仅限开发环境）`);
+    console.warn('[seed] 未设置 SEED_ADMIN_PASSWORD，使用 SEED_ADMIN_PASSWORD_DEFAULT（仅限开发环境）');
   }
 
   const app = await NestFactory.createApplicationContext(AppModule);
