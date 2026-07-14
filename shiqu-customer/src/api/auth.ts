@@ -14,11 +14,15 @@ export function login(data: { username: string; password: string }) {
   return request.post<never, LoginResult>('/api/auth/login', data)
 }
 
-export function forgotPassword(data: {
-  username: string
+export function sendForgotOtp(data: { phone: string }) {
+  return request.post<never, { message: string }>('/api/auth/forgot-password/send-code', data)
+}
+
+export function resetPassword(data: {
   phone: string
+  code: string
   newPassword: string
   confirmPassword: string
 }) {
-  return request.post<never, null>('/api/auth/forgot-password', data)
+  return request.post<never, null>('/api/auth/forgot-password/reset', data)
 }

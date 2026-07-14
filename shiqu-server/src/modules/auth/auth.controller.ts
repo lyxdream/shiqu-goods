@@ -4,7 +4,8 @@ import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { SendOtpDto } from './dto/send-otp.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @ApiTags('C端-认证')
 @Controller('auth')
@@ -26,11 +27,19 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
-  @Post('forgot-password')
+  @Post('forgot-password/send-code')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ auth: { ttl: 60_000, limit: 3 } })
+  @ApiOperation({ summary: '忘记密码 - 发送验证码（3次/分钟）' })
+  sendOtp(@Body() dto: SendOtpDto) {
+    return this.authService.sendOtp(dto);
+  }
+
+  @Post('forgot-password/reset')
   @HttpCode(HttpStatus.OK)
   @Throttle({ auth: { ttl: 60_000, limit: 5 } })
-  @ApiOperation({ summary: '忘记密码（用户名 + 绑定手机号验证）' })
-  forgotPassword(@Body() dto: ForgotPasswordDto) {
-    return this.authService.forgotPassword(dto);
+  @ApiOperation({ summary: '忘记密码 - 验证码校验并重置密码' })
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 }

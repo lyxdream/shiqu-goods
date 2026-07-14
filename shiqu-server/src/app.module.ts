@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import { ApiHostMiddleware } from 'src/common/middleware/api-host.middleware';
 import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
 import { TransformInterceptor } from 'src/common/interceptors/transform.interceptor';
@@ -16,7 +17,9 @@ import databaseConfig from 'src/config/database.config';
 import jwtConfig from 'src/config/jwt.config';
 import uploadConfig from 'src/config/upload.config';
 import aiConfig from 'src/config/ai.config';
+import redisConfig from 'src/config/redis.config';
 import { DbModule } from 'src/shared/db';
+import { RedisModule, REDIS_CLIENT } from 'src/shared/redis/redis.module';
 import { LoggerModule } from 'src/shared/logger';
 import { AuthModule } from 'src/modules/auth/auth.module';
 import { AdminAuthModule } from 'src/modules/admin-auth/admin-auth.module';
@@ -32,26 +35,21 @@ import { AppController } from './app.controller';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig, jwtConfig, uploadConfig, aiConfig],
+      load: [appConfig, databaseConfig, jwtConfig, uploadConfig, aiConfig, redisConfig],
     }),
+    RedisModule,
     ScheduleModule.forRoot(),
-    ThrottlerModule.forRoot([
-      {
-        name: 'auth',    // 认证类：IP 限流，5次/60s
-        ttl: 60_000,
-        limit: 5,
-      },
-      {
-        name: 'ai',      // AI 类：用户 ID 限流，20次/60s
-        ttl: 60_000,
-        limit: 20,
-      },
-      {
-        name: 'default', // 全局兜底：IP 限流，120次/60s
-        ttl: 60_000,
-        limit: 120,
-      },
-    ]),
+    ThrottlerModule.forRootAsync({
+      inject: [REDIS_CLIENT],
+      useFactory: (redisClient) => ({
+        throttlers: [
+          { name: 'auth',    ttl: 60_000, limit: 5   },
+          { name: 'ai',      ttl: 60_000, limit: 20  },
+          { name: 'default', ttl: 60_000, limit: 120 },
+        ],
+        storage: new ThrottlerStorageRedisService(redisClient),
+      }),
+    }),
     DbModule,
     LoggerModule,
     AuthModule,
