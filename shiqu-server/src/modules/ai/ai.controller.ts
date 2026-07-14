@@ -25,6 +25,8 @@ export class AiController {
   }
 
   @Post('document')
+  @UseGuards(UserThrottlerGuard)
+  @Throttle({ ai: { ttl: 60_000, limit: 5 } })
   @ApiOperation({ summary: '文档解析/内容生成（预留）' })
   parseDocument(@Body() body: AiParseDocumentDto) {
     return this.aiService.parseDocument(body);
