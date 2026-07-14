@@ -1,9 +1,5 @@
-import {
-  Injectable,
-  Logger,
-  OnApplicationBootstrap,
-  OnApplicationShutdown,
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
 import { OrderStatusEnum } from 'src/common/enums';
@@ -15,15 +11,9 @@ import { Order } from './entities/order.entity';
 const PENDING_TIMEOUT_MS =
   parseInt(process.env.ORDER_PENDING_TIMEOUT_MINUTES || '30', 10) * 60 * 1000;
 
-/** 扫描间隔（毫秒），默认 5 分钟扫一次 */
-const SCAN_INTERVAL_MS = 5 * 60 * 1000;
-
 @Injectable()
-export class OrderTaskService
-  implements OnApplicationBootstrap, OnApplicationShutdown
-{
+export class OrderTaskService {
   private readonly logger = new Logger(OrderTaskService.name);
-  private timer: NodeJS.Timeout | null = null;
 
   constructor(
     @InjectRepository(Order)
@@ -31,22 +21,8 @@ export class OrderTaskService
     private readonly dbService: DbService,
   ) {}
 
-  onApplicationBootstrap() {
-    this.timer = setInterval(
-      () => void this.cancelExpiredOrders(),
-      SCAN_INTERVAL_MS,
-    );
-    this.logger.log(
-      `待付款超时任务已启动，超时=${PENDING_TIMEOUT_MS / 60000}min，扫描间隔=${SCAN_INTERVAL_MS / 60000}min`,
-    );
-  }
-
-  onApplicationShutdown() {
-    if (this.timer) {
-      clearInterval(this.timer);
-    }
-  }
-
+  /** 每 5 分钟扫描一次超时待付款订单，自动取消并回滚库存 */
+  @Cron(CronExpression.EVERY_5_MINUTES)
   async cancelExpiredOrders() {
     const deadline = new Date(Date.now() - PENDING_TIMEOUT_MS);
 

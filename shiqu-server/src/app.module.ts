@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ApiHostMiddleware } from 'src/common/middleware/api-host.middleware';
 import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
@@ -33,6 +34,7 @@ import { AppController } from './app.controller';
       isGlobal: true,
       load: [appConfig, databaseConfig, jwtConfig, uploadConfig, aiConfig],
     }),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
       {
         name: 'auth',    // 认证类：IP 限流，5次/60s
