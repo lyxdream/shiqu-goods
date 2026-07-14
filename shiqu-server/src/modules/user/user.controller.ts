@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import type { JwtUserPayload } from 'src/common/decorators/current-user.decorator';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
@@ -30,6 +31,7 @@ export class UserController {
   }
 
   @Put('password')
+  @Throttle({ auth: { ttl: 60_000, limit: 5 } })
   @ApiOperation({ summary: '修改登录密码' })
   updatePassword(
     @CurrentUser() user: JwtUserPayload,
