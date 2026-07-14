@@ -16,7 +16,7 @@ export class User extends BaseEntity {
   @Column({ length: 500, default: '' })
   avatar: string;
 
-  @Column({ length: 20, default: '' })
+  @Column({ length: 20, default: '', unique: true })
   phone: string;
 
   @Column({
