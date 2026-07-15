@@ -14,8 +14,15 @@
           v-model="form.newPassword"
           type="password"
           label="新密码"
-          placeholder="至少 6 位"
+          placeholder="8-12 位，含数字/大小写/下划线中至少三种"
           :rules="[{ required: true, message: '请输入新密码' }]"
+        />
+        <van-field
+          v-model="form.confirmPassword"
+          type="password"
+          label="确认新密码"
+          placeholder="再次输入新密码"
+          :rules="[{ required: true, message: '请确认新密码' }]"
         />
       </van-cell-group>
       <div class="actions">
@@ -41,16 +48,20 @@ const saving = ref(false)
 const form = reactive({
   oldPassword: '',
   newPassword: '',
+  confirmPassword: '',
 })
 
 async function handleSubmit() {
-  if (form.newPassword.length < 6) {
-    showToast('新密码至少 6 位')
+  if (form.newPassword !== form.confirmPassword) {
+    showToast('两次密码不一致')
     return
   }
   saving.value = true
   try {
-    await updatePassword(form)
+    await updatePassword({
+      oldPassword: form.oldPassword,
+      newPassword: form.newPassword,
+    })
     showToast('修改成功，请重新登录')
     userStore.logout()
     router.replace({ name: 'Login' })
