@@ -2,7 +2,9 @@ import { ValidationPipe, RequestMethod } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import helmet from 'helmet';
 import { join } from 'path';
+import { getHelmetOptions } from 'src/config/helmet.config';
 import { LoggerService } from 'src/shared/logger';
 import { AppModule } from './app.module';
 import { setupSwagger } from './setup-swagger';
@@ -25,6 +27,11 @@ async function bootstrap() {
       'Bootstrap',
     );
   }
+
+  const isProduction =
+    configService.get<string>('app.nodeEnv') === 'production';
+  const swaggerEnabled = configService.get<boolean>('app.swaggerEnabled') === true;
+  app.use(helmet(getHelmetOptions(isProduction, swaggerEnabled)));
 
   app.setGlobalPrefix('api', {
     exclude: [{ path: 'health', method: RequestMethod.GET }],
