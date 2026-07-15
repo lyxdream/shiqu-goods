@@ -35,21 +35,31 @@
       <div class="actions">
         <van-button
           round
-          block
           plain
           type="primary"
           icon="chat-o"
+          class="action-btn"
           @click="openOrderHelp"
         >
-          订单问题咨询
+          咨询
         </van-button>
         <van-button
           v-if="order.status === 'pending_payment'"
           round
-          block
+          plain
+          type="danger"
+          class="action-btn"
+          :loading="cancelling"
+          @click="handleCancel"
+        >
+          取消订单
+        </van-button>
+        <van-button
+          v-if="order.status === 'pending_payment'"
+          round
           type="primary"
+          class="action-btn"
           :loading="paying"
-          style="margin-top: 12px"
           @click="handlePay"
         >
           模拟付款
@@ -63,7 +73,7 @@
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
-import { getOrderDetail, payOrder } from '@/api/order'
+import { getOrderDetail, payOrder, cancelOrder } from '@/api/order'
 import { getOrderStatusMeta } from '@/constants/status'
 import type { Order } from '@/types'
 import { formatDateTime } from '@/utils/date'
@@ -73,6 +83,7 @@ const route = useRoute()
 const router = useRouter()
 const order = ref<Order | null>(null)
 const paying = ref(false)
+const cancelling = ref(false)
 
 async function fetchDetail() {
   order.value = await getOrderDetail(Number(route.params.id))
@@ -98,6 +109,21 @@ async function handlePay() {
     showToast('付款成功')
   } finally {
     paying.value = false
+  }
+}
+
+async function handleCancel() {
+  if (!order.value) return
+  await showConfirmDialog({
+    title: '确认取消订单？',
+    message: '取消后库存将释放，可重新下单',
+  })
+  cancelling.value = true
+  try {
+    order.value = await cancelOrder(order.value.id)
+    showToast('订单已取消')
+  } finally {
+    cancelling.value = false
   }
 }
 
@@ -134,6 +160,15 @@ onMounted(fetchDetail)
 }
 
 .actions {
+  display: flex;
+  gap: 8px;
   margin: 24px 16px;
+}
+
+.action-btn {
+  flex: 1;
+  min-width: 0;
+  padding: 0 8px;
+  font-size: 13px;
 }
 </style>

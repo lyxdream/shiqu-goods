@@ -14,11 +14,13 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtOrAdminAuthGuard } from 'src/common/guards/jwt-or-admin-auth.guard';
+import { DefaultThrottled } from 'src/common/decorators/throttle-scope.decorator';
 import { UploadService } from './upload.service';
 
 @ApiTags('上传')
 @ApiBearerAuth()
 @UseGuards(JwtOrAdminAuthGuard)
+@DefaultThrottled()
 @Controller('upload')
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}

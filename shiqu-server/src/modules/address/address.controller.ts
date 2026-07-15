@@ -13,6 +13,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import type { JwtUserPayload } from 'src/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { DefaultThrottled } from 'src/common/decorators/throttle-scope.decorator';
 import { AddressService } from './address.service';
 import { CreateAddressDto } from './dto/create-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
@@ -20,6 +21,7 @@ import { UpdateAddressDto } from './dto/update-address.dto';
 @ApiTags('C端-收货地址')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+@DefaultThrottled()
 @Controller('addresses')
 export class AddressController {
   constructor(private readonly addressService: AddressService) {}

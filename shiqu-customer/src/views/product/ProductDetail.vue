@@ -33,7 +33,7 @@
       <div class="section-card">
         <div class="row">
           <span>购买数量</span>
-          <van-stepper v-model="quantity" :min="1" :max="Math.max(product.stock, 1)" />
+          <van-stepper v-model="quantity" :min="1" :max="maxQuantity" />
         </div>
       </div>
       <div class="section-card">
@@ -91,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
 import { getAddressList } from '@/api/address'
@@ -108,6 +108,8 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
+const MAX_ORDER_QUANTITY = 99
+
 const product = ref<Product | null>(null)
 const addresses = ref<Address[]>([])
 const selectedAddress = ref<Address | null>(null)
@@ -122,6 +124,11 @@ const placeholder =
   encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="280"><rect fill="#f2f3f5" width="400" height="280"/><text x="200" y="150" text-anchor="middle" fill="#c8c9cc" font-size="16">暂无图片</text></svg>',
   )
+
+const maxQuantity = computed(() => {
+  if (!product.value) return 1
+  return Math.max(Math.min(product.value.stock, MAX_ORDER_QUANTITY), 1)
+})
 
 function selectAddress(item: Address) {
   selectedAddress.value = item
@@ -191,6 +198,10 @@ async function handleSubmit() {
     showToast('库存不足')
     return
   }
+  if (quantity.value > MAX_ORDER_QUANTITY) {
+    showToast(`单笔最多购买 ${MAX_ORDER_QUANTITY} 件`)
+    return
+  }
 
   await showConfirmDialog({
     title: '确认下单',
@@ -214,6 +225,7 @@ async function handleSubmit() {
 onMounted(async () => {
   const id = Number(route.params.id)
   product.value = await getProductDetail(id)
+  quantity.value = Math.min(quantity.value, maxQuantity.value)
   if (userStore.isLoggedIn) {
     addresses.value = await getAddressList()
     selectedAddress.value = addresses.value[0] || null

@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AdminJwtAuthGuard } from 'src/common/guards/admin-jwt-auth.guard';
+import { DefaultThrottled } from 'src/common/decorators/throttle-scope.decorator';
 import { QueryOrderDto } from './dto/query-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { OrderService } from './order.service';
@@ -17,6 +18,7 @@ import { OrderService } from './order.service';
 @ApiTags('B端-订单管理')
 @ApiBearerAuth()
 @UseGuards(AdminJwtAuthGuard)
+@DefaultThrottled()
 @Controller('admin/orders')
 export class OrderAdminController {
   constructor(private readonly orderService: OrderService) {}

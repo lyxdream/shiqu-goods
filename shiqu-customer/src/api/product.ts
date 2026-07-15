@@ -1,8 +1,11 @@
 import request from './request'
-import type { Product } from '@/types'
+import type { PageResult, Product } from '@/types'
 
-export function getProductList() {
-  return request.get<never, Product[]>('/api/products')
+export function getProductList(params?: { pageNum?: number; pageSize?: number }) {
+  return request.get<never, PageResult<Product>>('/api/products', {
+    params,
+    errorCustom: true,
+  })
 }
 
 export function getProductDetail(id: number) {

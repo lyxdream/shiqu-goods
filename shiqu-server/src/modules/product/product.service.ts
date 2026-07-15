@@ -5,10 +5,10 @@ import { ProductStatusEnum } from 'src/common/enums';
 import {
   mapPageProductsToApi,
   mapProductToApi,
-  mapProductsToApi,
   toCents,
 } from 'src/common/utils/money.util';
 import { paginate } from 'src/common/utils/paginate.util';
+import { PagingDto } from 'src/common/dto';
 import { BizNoService } from 'src/shared/biz-no';
 import { DbService } from 'src/shared/db';
 import { Product } from './entities/product.entity';
@@ -25,12 +25,13 @@ export class ProductService {
     private readonly bizNoService: BizNoService,
   ) {}
 
-  async findAllForCustomer() {
-    const list = await this.productRepository.find({
-      where: { status: ProductStatusEnum.ON_SALE },
-      order: { createdAt: 'DESC' },
-    });
-    return mapProductsToApi(list);
+  async findAllForCustomer(query: PagingDto) {
+    const qb = this.productRepository
+      .createQueryBuilder('product')
+      .where('product.status = :status', { status: ProductStatusEnum.ON_SALE })
+      .orderBy('product.createdAt', 'DESC');
+    const page = await paginate(qb, query);
+    return mapPageProductsToApi(page);
   }
 
   async findOneForCustomer(id: number) {

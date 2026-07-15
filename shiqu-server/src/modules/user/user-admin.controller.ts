@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AdminJwtAuthGuard } from 'src/common/guards/admin-jwt-auth.guard';
+import { DefaultThrottled } from 'src/common/decorators/throttle-scope.decorator';
 import { QueryUserDto } from './dto/query-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateUserStatusDto } from './dto/update-user-status.dto';
@@ -19,6 +20,7 @@ import { UserAdminService } from './user-admin.service';
 @ApiTags('B端-用户管理')
 @ApiBearerAuth()
 @UseGuards(AdminJwtAuthGuard)
+@DefaultThrottled()
 @Controller('admin/users')
 export class UserAdminController {
   constructor(private readonly userAdminService: UserAdminService) {}

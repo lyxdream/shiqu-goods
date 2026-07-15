@@ -126,13 +126,55 @@ export class OrderService {
     return mapOrderToApi(updated!);
   }
 
-  async findAllForUser(userId: number) {
-    const list = await this.orderRepository.find({
-      where: { userId },
-      relations: ['items'],
-      order: { createdAt: 'DESC' },
+  async findAllForUser(userId: number, query: QueryOrderDto) {
+    const qb = this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.items', 'items')
+      .where('order.userId = :userId', { userId });
+
+    if (query.status) {
+      qb.andWhere('order.status = :status', { status: query.status });
+    }
+
+    qb.orderBy('order.createdAt', 'DESC');
+    const page = await paginate(qb, query);
+    return mapPageOrdersToApi(page);
+  }
+
+  async cancel(userId: number, orderId: number) {
+    const order = await this.findOwned(userId, orderId);
+    this.assertTransition(order.status, OrderStatusEnum.CANCELLED);
+
+    await this.dbService.transaction(async (manager) => {
+      const result = await manager
+        .createQueryBuilder()
+        .update(Order)
+        .set({ status: OrderStatusEnum.CANCELLED })
+        .where('id = :id AND status = :status', {
+          id: order.id,
+          status: OrderStatusEnum.PENDING_PAYMENT,
+        })
+        .execute();
+
+      if (!result.affected) {
+        throw new BadRequestException('订单状态已变更，无法取消');
+      }
+
+      for (const item of order.items) {
+        await manager
+          .createQueryBuilder()
+          .update(Product)
+          .set({ stock: () => `stock + ${item.quantity}` })
+          .where('id = :id', { id: item.productId })
+          .execute();
+      }
     });
-    return mapOrdersToApi(list);
+
+    const updated = await this.orderRepository.findOne({
+      where: { id: orderId },
+      relations: ['items'],
+    });
+    return mapOrderToApi(updated!);
   }
 
   async findOneForUser(userId: number, id: number) {

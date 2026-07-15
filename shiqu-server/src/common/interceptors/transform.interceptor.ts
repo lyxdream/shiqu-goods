@@ -4,6 +4,7 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { Observable, map } from 'rxjs';
 import { ResponseCode } from 'src/common/constants/response-code';
 import type { ApiResponse } from 'src/common/interfaces/api-response.interface';
@@ -14,9 +15,12 @@ export class TransformInterceptor<T> implements NestInterceptor<
   ApiResponse<T>
 > {
   intercept(
-    _context: ExecutionContext,
+    context: ExecutionContext,
     next: CallHandler<T>,
   ): Observable<ApiResponse<T>> {
+    const res = context.switchToHttp().getResponse<Response>();
+    res.setHeader('Cache-Control', 'no-store');
+
     return next.handle().pipe(
       map((data) => ({
         code: ResponseCode.SUCCESS,

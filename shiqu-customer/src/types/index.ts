@@ -4,6 +4,13 @@ export interface ApiResponse<T = unknown> {
   data: T
 }
 
+export interface PageResult<T> {
+  list: T[]
+  total: number
+  pageNum: number
+  pageSize: number
+}
+
 export interface LoginResult {
   accessToken: string
 }

@@ -1,6 +1,10 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import {
+  DefaultThrottled,
+  StrictAuth,
+  StrictOtp,
+} from 'src/common/decorators/throttle-scope.decorator';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import type { JwtUserPayload } from 'src/common/types/jwt-payload';
@@ -16,7 +20,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  @Throttle({ auth: { ttl: 60_000, limit: 5 } })
+  @StrictAuth()
   @ApiOperation({ summary: '用户注册' })
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
@@ -24,7 +28,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ auth: { ttl: 60_000, limit: 5 } })
+  @StrictAuth()
   @ApiOperation({ summary: '用户登录' })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
@@ -32,7 +36,7 @@ export class AuthController {
 
   @Post('forgot-password/send-code')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ auth: { ttl: 60_000, limit: 3 } })
+  @StrictOtp()
   @ApiOperation({ summary: '忘记密码 - 发送验证码（3次/分钟）' })
   sendOtp(@Body() dto: SendOtpDto) {
     return this.authService.sendOtp(dto);
@@ -40,7 +44,7 @@ export class AuthController {
 
   @Post('forgot-password/reset')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ auth: { ttl: 60_000, limit: 5 } })
+  @StrictAuth()
   @ApiOperation({ summary: '忘记密码 - 验证码校验并重置密码' })
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
@@ -48,6 +52,7 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
+  @DefaultThrottled()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '退出登录（吊销当前 Token）' })

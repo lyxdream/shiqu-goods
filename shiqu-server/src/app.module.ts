@@ -4,7 +4,7 @@ import {
   NestModule,
   RequestMethod,
 } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -18,6 +18,10 @@ import jwtConfig from 'src/config/jwt.config';
 import uploadConfig from 'src/config/upload.config';
 import aiConfig from 'src/config/ai.config';
 import redisConfig from 'src/config/redis.config';
+import throttleConfig, {
+  toThrottlerDefinitions,
+  type ThrottleSettings,
+} from 'src/config/throttle.config';
 import { DbModule } from 'src/shared/db';
 import { RedisModule, REDIS_CLIENT } from 'src/shared/redis/redis.module';
 import { LoggerModule } from 'src/shared/logger';
@@ -35,18 +39,24 @@ import { AppController } from './app.controller';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig, jwtConfig, uploadConfig, aiConfig, redisConfig],
+      load: [
+        appConfig,
+        databaseConfig,
+        jwtConfig,
+        uploadConfig,
+        aiConfig,
+        redisConfig,
+        throttleConfig,
+      ],
     }),
     RedisModule,
     ScheduleModule.forRoot(),
     ThrottlerModule.forRootAsync({
-      inject: [REDIS_CLIENT],
-      useFactory: (redisClient) => ({
-        throttlers: [
-          { name: 'auth',    ttl: 60_000, limit: 5   },
-          { name: 'ai',      ttl: 60_000, limit: 20  },
-          { name: 'default', ttl: 60_000, limit: 120 },
-        ],
+      inject: [REDIS_CLIENT, ConfigService],
+      useFactory: (redisClient, configService: ConfigService) => ({
+        throttlers: toThrottlerDefinitions(
+          configService.get<ThrottleSettings>('throttle')!,
+        ),
         storage: new ThrottlerStorageRedisService(redisClient),
       }),
     }),

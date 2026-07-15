@@ -1,6 +1,9 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import {
+  AiChat,
+  AiDocument,
+} from 'src/common/decorators/throttle-scope.decorator';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { UserThrottlerGuard } from 'src/common/guards/user-throttler.guard';
@@ -18,7 +21,7 @@ export class AiController {
 
   @Post('chat')
   @UseGuards(UserThrottlerGuard)
-  @Throttle({ ai: { ttl: 60_000, limit: 20 } })
+  @AiChat()
   @ApiOperation({ summary: 'AI 智能对话（MVP：商品答疑 / 订单答疑）' })
   chat(@CurrentUser() user: JwtUserPayload, @Body() body: AiChatDto) {
     return this.aiService.chat(user.sub, body);
@@ -26,7 +29,7 @@ export class AiController {
 
   @Post('document')
   @UseGuards(UserThrottlerGuard)
-  @Throttle({ ai: { ttl: 60_000, limit: 5 } })
+  @AiDocument()
   @ApiOperation({ summary: '文档解析/内容生成（预留）' })
   parseDocument(@Body() body: AiParseDocumentDto) {
     return this.aiService.parseDocument(body);

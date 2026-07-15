@@ -69,10 +69,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
       );
     }
 
-    response.status(HttpStatus.OK).json({
-      code,
-      message,
-      data: null,
-    });
+    response
+      .status(HttpStatus.OK)
+      .setHeader('Cache-Control', 'no-store')
+      .json({
+        code,
+        message,
+        data: null,
+      });
   }
 }

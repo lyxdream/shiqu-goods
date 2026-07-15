@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AdminJwtAuthGuard } from 'src/common/guards/admin-jwt-auth.guard';
+import { DefaultThrottled } from 'src/common/decorators/throttle-scope.decorator';
 import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -22,6 +23,7 @@ import { ProductService } from './product.service';
 @ApiTags('B端-商品管理')
 @ApiBearerAuth()
 @UseGuards(AdminJwtAuthGuard)
+@DefaultThrottled()
 @Controller('admin/products')
 export class ProductAdminController {
   constructor(private readonly productService: ProductService) {}
