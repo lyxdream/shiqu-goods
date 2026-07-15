@@ -24,7 +24,7 @@
 | `src/config/database.config.ts` | 读 `.env`，整理成 `database.xxx` |
 | `src/shared/db/db.module.ts` | `TypeOrmModule.forRootAsync`，真正连 MySQL |
 | `src/shared/db/db.service.ts` | 封装事务 `transaction()` |
-| `src/migrations/` | 迁移目录（目前预留） |
+| `src/migrations/` | 迁移目录；通过 `npm run migration:run` 执行 |
 | `scripts/seed.ts` | 启动时往 `admins` 插初始管理员 |
 
 ### 配置取值链路
@@ -56,7 +56,7 @@ TypeOrmModule.forRootAsync 拿到最终配置
 
 `.env` 中 `DB_SYNC=true` 时，启动服务后 TypeORM 会根据 Entity **自动同步表结构**（仅建议开发环境使用）。
 
-生产环境应设为 `DB_SYNC=false`，改用 `migrations/` 管理表结构变更。
+生产环境应设为 `DB_SYNC=false`，部署前在 CI/发布脚本中执行 `npm run migration:run`（应用启动不会自动跑 migration，避免多实例竞争）。
 
 ---
 

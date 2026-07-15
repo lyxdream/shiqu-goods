@@ -17,9 +17,6 @@ import { DbService } from './db.service';
         database: configService.get<string>('database.database'),
         autoLoadEntities: true,
         synchronize: configService.get<boolean>('database.synchronize'),
-        migrations: [__dirname + '/../../migrations/*{.ts,.js}'],
-        // 非 sync 模式（生产/预发）启动时自动执行未跑的 migration
-        migrationsRun: !configService.get<boolean>('database.synchronize'),
       }),
     }),
   ],
