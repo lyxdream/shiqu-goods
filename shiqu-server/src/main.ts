@@ -15,6 +15,16 @@ async function bootstrap() {
   const port = configService.get<number>('app.port') || 3000;
   const uploadDir = configService.get<string>('upload.dir') || 'uploads';
   const corsOrigins = configService.get<string[]>('app.corsOrigins') || [];
+  const trustProxy = configService.get<false | true | number>('app.trustProxy');
+
+  if (trustProxy !== false) {
+    app.set('trust proxy', trustProxy);
+  } else if (configService.get<string>('app.nodeEnv') === 'production') {
+    logger.warn(
+      'TRUST_PROXY 未启用，反向代理后 IP 限流与域名隔离可能异常',
+      'Bootstrap',
+    );
+  }
 
   app.setGlobalPrefix('api', {
     exclude: [{ path: 'health', method: RequestMethod.GET }],
