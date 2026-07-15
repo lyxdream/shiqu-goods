@@ -1,10 +1,11 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import {
+  throwAlreadyExists,
+  throwInvalidCredentials,
+  throwNotFound,
+} from 'src/common/exceptions/biz-error.util';
 import { comparePassword, hashPassword } from 'src/common/utils/bcrypt.util';
 import { RedisService } from 'src/shared/redis/redis.service';
 import { User } from './entities/user.entity';
@@ -31,7 +32,7 @@ export class UserService {
         where: { phone: dto.phone },
       });
       if (existing && existing.id !== userId) {
-        throw new BadRequestException('该手机号已被使用');
+        throwAlreadyExists('该手机号已被使用');
       }
     }
 
@@ -47,12 +48,12 @@ export class UserService {
       .getOne();
 
     if (!user) {
-      throw new NotFoundException('用户不存在');
+      throwNotFound('用户不存在');
     }
 
     const valid = await comparePassword(dto.oldPassword, user.password);
     if (!valid) {
-      throw new BadRequestException('原密码错误');
+      throwInvalidCredentials('原密码错误');
     }
     user.password = await hashPassword(dto.newPassword);
     await this.userRepository.save(user);
@@ -64,7 +65,7 @@ export class UserService {
   async findById(id: number) {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException('用户不存在');
+      throwNotFound('用户不存在');
     }
     return user;
   }

@@ -1,7 +1,6 @@
 import axios from 'axios'
 import { showToast } from 'vant'
 import type { ApiResponse } from '@/types'
-import { SUCCESS_CODES } from '@/constants/response-code'
 import { tokenStorage } from '@/utils/storage'
 import { responseStatusCallback } from './response-status'
 
@@ -20,8 +19,8 @@ request.interceptors.request.use((config) => {
 
 request.interceptors.response.use(
   (response) => {
-    const { code, data } = response.data as ApiResponse
-    if (SUCCESS_CODES.includes(code as (typeof SUCCESS_CODES)[number])) {
+    const { success, data } = response.data as ApiResponse
+    if (success) {
       return data as never
     }
     return responseStatusCallback(response)

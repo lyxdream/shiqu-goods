@@ -1,14 +1,11 @@
-import {
-  BadGatewayException,
-  Injectable,
-  ServiceUnavailableException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
 import { Repository } from 'typeorm';
+import { throwBusiness } from 'src/common/exceptions/biz-error.util';
 import { fromCents } from 'src/common/utils/money.util';
 import { ProductStatusEnum } from 'src/common/enums';
 import { Product } from 'src/modules/product/entities/product.entity';
@@ -175,9 +172,9 @@ export class AiService {
         axiosError.code === 'ECONNREFUSED' ||
         axiosError.code === 'ETIMEDOUT'
       ) {
-        throw new ServiceUnavailableException('AI 服务暂不可用');
+        throwBusiness('AI 服务暂不可用');
       }
-      throw new BadGatewayException(
+      throwBusiness(
         (axiosError.response?.data as { message?: string })?.message ||
           'AI 服务调用失败',
       );

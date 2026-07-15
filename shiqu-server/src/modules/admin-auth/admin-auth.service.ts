@@ -2,8 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ResponseCode } from 'src/common/constants/response-code';
-import { BusinessException } from 'src/common/exceptions/business.exception';
+import { throwInvalidCredentials } from 'src/common/exceptions/biz-error.util';
 import type { JwtAdminPayload } from 'src/common/types/jwt-payload';
 import { comparePassword } from 'src/common/utils/bcrypt.util';
 import { Admin } from './entities/admin.entity';
@@ -25,18 +24,12 @@ export class AdminAuthService {
       .getOne();
 
     if (!admin) {
-      throw new BusinessException(
-        ResponseCode.INVALID_CREDENTIALS,
-        '用户名或密码错误',
-      );
+      throwInvalidCredentials('用户名或密码错误');
     }
 
     const valid = await comparePassword(dto.password, admin.password);
     if (!valid) {
-      throw new BusinessException(
-        ResponseCode.INVALID_CREDENTIALS,
-        '用户名或密码错误',
-      );
+      throwInvalidCredentials('用户名或密码错误');
     }
 
     const payload: JwtAdminPayload = {

@@ -1,5 +1,6 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { throwValidation } from 'src/common/exceptions/biz-error.util';
 import { existsSync, mkdirSync } from 'fs';
 import { extname, join } from 'path';
 
@@ -28,15 +29,15 @@ export class UploadService {
 
   validateFile(file: Express.Multer.File) {
     if (!file) {
-      throw new BadRequestException('请选择文件');
+      throwValidation('请选择文件');
     }
     const allowed = this.configService.get<string[]>('upload.allowedMimeTypes');
     if (allowed && !allowed.includes(file.mimetype)) {
-      throw new BadRequestException('不支持的文件类型');
+      throwValidation('不支持的文件类型');
     }
     const maxSize = this.configService.get<number>('upload.maxSize');
     if (maxSize && file.size > maxSize) {
-      throw new BadRequestException('文件大小超出限制');
+      throwValidation('文件大小超出限制');
     }
   }
 

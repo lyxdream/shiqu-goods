@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
@@ -10,6 +6,10 @@ import {
   OrderStatusEnum,
   ProductStatusEnum,
 } from 'src/common/enums';
+import {
+  throwBusiness,
+  throwNotFound,
+} from 'src/common/exceptions/biz-error.util';
 import { BizNoService } from 'src/shared/biz-no';
 import {
   calcLineAmountCents,
@@ -48,10 +48,10 @@ export class OrderService {
         lock: { mode: 'pessimistic_write' },
       });
       if (!product) {
-        throw new NotFoundException('商品不存在或已下架');
+        throwNotFound('商品不存在或已下架');
       }
       if (product.stock < dto.quantity) {
-        throw new BadRequestException('库存不足');
+        throwBusiness('库存不足');
       }
 
       const address = await this.addressService.findOwned(
@@ -116,7 +116,7 @@ export class OrderService {
       .execute();
 
     if (!result.affected) {
-      throw new BadRequestException('订单状态已变更，支付失败，请刷新后重试');
+      throwBusiness('订单状态已变更，支付失败，请刷新后重试');
     }
 
     const updated = await this.orderRepository.findOne({
@@ -157,7 +157,7 @@ export class OrderService {
         .execute();
 
       if (!result.affected) {
-        throw new BadRequestException('订单状态已变更，无法取消');
+        throwBusiness('订单状态已变更，无法取消');
       }
 
       for (const item of order.items) {
@@ -202,7 +202,7 @@ export class OrderService {
       relations: ['items'],
     });
     if (!order) {
-      throw new NotFoundException('订单不存在');
+      throwNotFound('订单不存在');
     }
     return mapOrderToApi(order);
   }
@@ -213,7 +213,7 @@ export class OrderService {
       relations: ['items'],
     });
     if (!order) {
-      throw new NotFoundException('订单不存在');
+      throwNotFound('订单不存在');
     }
     this.assertTransition(order.status, dto.status);
 
@@ -231,7 +231,7 @@ export class OrderService {
           .execute();
 
         if (!result.affected) {
-          throw new BadRequestException('订单状态已变更，无法取消');
+          throwBusiness('订单状态已变更，无法取消');
         }
 
         for (const item of order.items) {
@@ -259,7 +259,7 @@ export class OrderService {
     if (from === to) return;
     const allowed = ORDER_STATUS_TRANSITIONS[from] || [];
     if (!allowed.includes(to)) {
-      throw new BadRequestException(`订单状态不允许从 ${from} 变更为 ${to}`);
+      throwBusiness(`订单状态不允许从 ${from} 变更为 ${to}`);
     }
   }
 
@@ -269,7 +269,7 @@ export class OrderService {
       relations: ['items'],
     });
     if (!order) {
-      throw new NotFoundException('订单不存在');
+      throwNotFound('订单不存在');
     }
     return order;
   }

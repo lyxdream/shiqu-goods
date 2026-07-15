@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
+import { throwNotFound } from 'src/common/exceptions/biz-error.util';
 import { Address } from './entities/address.entity';
 import { CreateAddressDto } from './dto/create-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
@@ -44,7 +45,7 @@ export class AddressService {
       where: { id, userId },
     });
     if (!address) {
-      throw new NotFoundException('地址不存在');
+      throwNotFound('地址不存在');
     }
     return address;
   }

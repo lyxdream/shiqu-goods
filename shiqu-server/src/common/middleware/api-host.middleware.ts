@@ -1,5 +1,6 @@
-import { ForbiddenException, Injectable, NestMiddleware } from '@nestjs/common';
+import { Injectable, NestMiddleware } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { throwForbidden } from 'src/common/exceptions/biz-error.util';
 import { NextFunction, Request, Response } from 'express';
 
 /** 管理域名也允许访问的共享 API 前缀 */
@@ -24,7 +25,7 @@ export class ApiHostMiddleware implements NestMiddleware {
     );
 
     if (host === apiHost && isAdminPath) {
-      throw new ForbiddenException('C 端域名禁止访问管理接口');
+      throwForbidden('C 端域名禁止访问管理接口');
     }
 
     if (
@@ -33,7 +34,7 @@ export class ApiHostMiddleware implements NestMiddleware {
       !isAdminPath &&
       !isSharedPath
     ) {
-      throw new ForbiddenException('管理域名禁止访问用户接口');
+      throwForbidden('管理域名禁止访问用户接口');
     }
 
     next();

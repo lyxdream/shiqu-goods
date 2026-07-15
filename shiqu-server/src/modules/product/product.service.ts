@@ -1,10 +1,14 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
   ProductStatusEnum,
   UNFINISHED_ORDER_STATUSES,
 } from 'src/common/enums';
+import {
+  throwBusiness,
+  throwNotFound,
+} from 'src/common/exceptions/biz-error.util';
 import type { JwtAdminPayload } from 'src/common/types/jwt-payload';
 import {
   mapPageProductsToApi,
@@ -51,7 +55,7 @@ export class ProductService {
       where: { id, status: ProductStatusEnum.ON_SALE },
     });
     if (!product) {
-      throw new NotFoundException('商品不存在或已下架');
+      throwNotFound('商品不存在或已下架');
     }
     return mapProductToApi(product);
   }
@@ -77,7 +81,7 @@ export class ProductService {
   async findOne(id: number) {
     const product = await this.productRepository.findOne({ where: { id } });
     if (!product) {
-      throw new NotFoundException('商品不存在');
+      throwNotFound('商品不存在');
     }
     return this.mapProductToAdminApi(product);
   }
@@ -98,7 +102,7 @@ export class ProductService {
   async update(id: number, dto: UpdateProductDto) {
     const product = await this.productRepository.findOne({ where: { id } });
     if (!product) {
-      throw new NotFoundException('商品不存在');
+      throwNotFound('商品不存在');
     }
 
     const { stock: physicalStock, ...rest } = dto;
@@ -122,7 +126,7 @@ export class ProductService {
   async updateStatus(id: number, status: ProductStatusEnum) {
     const product = await this.productRepository.findOne({ where: { id } });
     if (!product) {
-      throw new NotFoundException('商品不存在');
+      throwNotFound('商品不存在');
     }
     product.status = status;
     const saved = await this.productRepository.save(product);
@@ -132,7 +136,7 @@ export class ProductService {
   async remove(id: number, admin: JwtAdminPayload) {
     const product = await this.productRepository.findOne({ where: { id } });
     if (!product) {
-      throw new NotFoundException('商品不存在');
+      throwNotFound('商品不存在');
     }
 
     await this.dbService.transaction(async (manager) => {
@@ -146,7 +150,7 @@ export class ProductService {
         .getCount();
 
       if (unfinishedCount > 0) {
-        throw new BadRequestException(
+        throwBusiness(
           `该商品存在 ${unfinishedCount} 笔未完结订单（待付款或已付款），无法删除`,
         );
       }

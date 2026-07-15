@@ -31,3 +31,7 @@ export const SUCCESS_CODES: number[] = [
   ResponseCode.SUCCESS,
   ResponseCode.SUCCESS_ALT,
 ];
+
+export function isSuccessCode(code: number): boolean {
+  return SUCCESS_CODES.includes(code);
+}

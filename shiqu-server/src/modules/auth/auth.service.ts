@@ -3,8 +3,14 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ResponseCode } from 'src/common/constants/response-code';
-import { BusinessException } from 'src/common/exceptions/business.exception';
+import {
+  throwAccountDisabled,
+  throwAlreadyExists,
+  throwBusiness,
+  throwInvalidCredentials,
+  throwNotFound,
+  throwValidation,
+} from 'src/common/exceptions/biz-error.util';
 import { UserStatusEnum } from 'src/common/enums';
 import type { JwtUserPayload } from 'src/common/types/jwt-payload';
 import { comparePassword, hashPassword } from 'src/common/utils/bcrypt.util';
@@ -36,27 +42,21 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     if (dto.password !== dto.confirmPassword) {
-      throw new BusinessException(
-        ResponseCode.VALIDATION_ERROR,
-        '两次密码不一致',
-      );
+      throwValidation('两次密码不一致');
     }
 
     const exists = await this.userRepository.findOne({
       where: { username: dto.username },
     });
     if (exists) {
-      throw new BusinessException(ResponseCode.ALREADY_EXISTS, '用户名已存在');
+      throwAlreadyExists('用户名已存在');
     }
 
     const phoneExists = await this.userRepository.findOne({
       where: { phone: dto.phone.trim() },
     });
     if (phoneExists) {
-      throw new BusinessException(
-        ResponseCode.ALREADY_EXISTS,
-        '手机号已被注册',
-      );
+      throwAlreadyExists('手机号已被注册');
     }
 
     const user = this.userRepository.create({
@@ -80,24 +80,15 @@ export class AuthService {
       .getOne();
 
     if (!user) {
-      throw new BusinessException(
-        ResponseCode.INVALID_CREDENTIALS,
-        '用户名或密码错误',
-      );
+      throwInvalidCredentials('用户名或密码错误');
     }
     if (user.status === UserStatusEnum.DISABLED) {
-      throw new BusinessException(
-        ResponseCode.ACCOUNT_DISABLED,
-        '账号已被禁用',
-      );
+      throwAccountDisabled('账号已被禁用');
     }
 
     const valid = await comparePassword(dto.password, user.password);
     if (!valid) {
-      throw new BusinessException(
-        ResponseCode.INVALID_CREDENTIALS,
-        '用户名或密码错误',
-      );
+      throwInvalidCredentials('用户名或密码错误');
     }
 
     return this.buildToken(user);
@@ -112,10 +103,10 @@ export class AuthService {
     const user = await this.userRepository.findOne({ where: { phone } });
 
     if (!user) {
-      throw new BusinessException(ResponseCode.NOT_FOUND, '该手机号未注册，请先注册');
+      throwNotFound('该手机号未注册，请先注册');
     }
     if (user.status === UserStatusEnum.DISABLED) {
-      throw new BusinessException(ResponseCode.ACCOUNT_DISABLED, '账号已被禁用');
+      throwAccountDisabled('账号已被禁用');
     }
 
     const code = this.generateOtp();
@@ -135,10 +126,7 @@ export class AuthService {
    */
   async resetPassword(dto: ResetPasswordDto) {
     if (dto.newPassword !== dto.confirmPassword) {
-      throw new BusinessException(
-        ResponseCode.VALIDATION_ERROR,
-        '两次密码不一致',
-      );
+      throwValidation('两次密码不一致');
     }
 
     const phone = dto.phone.trim();
@@ -148,8 +136,7 @@ export class AuthService {
     // 检查是否已被锁定
     const failCount = await this.redisService.get(lockKey);
     if (failCount && parseInt(failCount, 10) >= OTP_MAX_FAIL) {
-      throw new BusinessException(
-        ResponseCode.BUSINESS_ERROR,
+      throwBusiness(
         `验证码错误次数过多，请 ${OTP_LOCK_TTL / 60} 分钟后重试`,
       );
     }
@@ -157,10 +144,7 @@ export class AuthService {
     // 取出验证码
     const storedCode = await this.redisService.get(otpKey);
     if (!storedCode) {
-      throw new BusinessException(
-        ResponseCode.BUSINESS_ERROR,
-        '验证码已过期或不存在，请重新获取',
-      );
+      throwBusiness('验证码已过期或不存在，请重新获取');
     }
 
     // 比对验证码
@@ -171,8 +155,7 @@ export class AuthService {
         await this.redisService.expire(lockKey, OTP_LOCK_TTL);
       }
       const remaining = OTP_MAX_FAIL - newCount;
-      throw new BusinessException(
-        ResponseCode.INVALID_CREDENTIALS,
+      throwInvalidCredentials(
         remaining > 0
           ? `验证码错误，还剩 ${remaining} 次机会`
           : `验证码错误次数过多，请 ${OTP_LOCK_TTL / 60} 分钟后重试`,
@@ -182,10 +165,10 @@ export class AuthService {
     // 验证码正确：改密并立即删除验证码（防重放）
     const user = await this.userRepository.findOne({ where: { phone } });
     if (!user) {
-      throw new BusinessException(ResponseCode.NOT_FOUND, '用户不存在');
+      throwNotFound('用户不存在');
     }
     if (user.status === UserStatusEnum.DISABLED) {
-      throw new BusinessException(ResponseCode.ACCOUNT_DISABLED, '账号已被禁用');
+      throwAccountDisabled('账号已被禁用');
     }
 
     user.password = await hashPassword(dto.newPassword);
