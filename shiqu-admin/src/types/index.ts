@@ -33,12 +33,21 @@ export interface Product {
   name: string
   /** 价格（元），API 层与展示单位 */
   price: number
+  /** 可售库存（C 端下单依据） */
   stock: number
   image: string
   description: string | null
   status: 'on_sale' | 'off_sale'
   createdAt: string
   updatedAt: string
+  /** 管理端：待付款预占 */
+  pendingReserved?: number
+  /** 管理端：已付款待自提预占 */
+  paidReserved?: number
+  /** 管理端：预占合计 */
+  reservedStock?: number
+  /** 管理端：实物库存（可售 + 预占） */
+  physicalStock?: number
 }
 
 export interface OrderItem {

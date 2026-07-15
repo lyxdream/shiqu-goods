@@ -18,6 +18,11 @@ import { OrderItem } from 'src/modules/order/entities/order-item.entity';
 import { BizNoService } from 'src/shared/biz-no';
 import { DbService } from 'src/shared/db';
 import { Product } from './entities/product.entity';
+import {
+  getProductReservedStock,
+  toPhysicalStock,
+  toSellableStock,
+} from './product-stock.util';
 import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -63,7 +68,10 @@ export class ProductService {
 
     qb.orderBy('product.createdAt', 'DESC');
     const page = await paginate(qb, query);
-    return mapPageProductsToApi(page);
+    const list = await Promise.all(
+      page.list.map((product) => this.mapProductToAdminApi(product)),
+    );
+    return { ...page, list };
   }
 
   async findOne(id: number) {
@@ -71,7 +79,7 @@ export class ProductService {
     if (!product) {
       throw new NotFoundException('商品不存在');
     }
-    return mapProductToApi(product);
+    return this.mapProductToAdminApi(product);
   }
 
   async create(dto: CreateProductDto) {
@@ -83,7 +91,7 @@ export class ProductService {
         productNo,
       });
       const saved = await manager.save(product);
-      return mapProductToApi(saved);
+      return this.mapProductToAdminApi(saved);
     });
   }
 
@@ -92,12 +100,23 @@ export class ProductService {
     if (!product) {
       throw new NotFoundException('商品不存在');
     }
+
+    const { stock: physicalStock, ...rest } = dto;
     Object.assign(product, {
-      ...dto,
-      ...(dto.price !== undefined ? { price: toCents(dto.price) } : {}),
+      ...rest,
+      ...(rest.price !== undefined ? { price: toCents(rest.price) } : {}),
     });
+
+    if (physicalStock !== undefined) {
+      const reserved = await getProductReservedStock(
+        this.productRepository.manager,
+        id,
+      );
+      product.stock = toSellableStock(physicalStock, reserved.reservedStock);
+    }
+
     const saved = await this.productRepository.save(product);
-    return mapProductToApi(saved);
+    return this.mapProductToAdminApi(saved);
   }
 
   async updateStatus(id: number, status: ProductStatusEnum) {
@@ -107,7 +126,7 @@ export class ProductService {
     }
     product.status = status;
     const saved = await this.productRepository.save(product);
-    return mapProductToApi(saved);
+    return this.mapProductToAdminApi(saved);
   }
 
   async remove(id: number, admin: JwtAdminPayload) {
@@ -139,5 +158,20 @@ export class ProductService {
     });
 
     return null;
+  }
+
+  private async mapProductToAdminApi(product: Product) {
+    const reserved = await getProductReservedStock(
+      this.productRepository.manager,
+      product.id,
+    );
+    const mapped = mapProductToApi(product);
+    return {
+      ...mapped,
+      pendingReserved: reserved.pendingReserved,
+      paidReserved: reserved.paidReserved,
+      reservedStock: reserved.reservedStock,
+      physicalStock: toPhysicalStock(mapped.stock, reserved.reservedStock),
+    };
   }
 }

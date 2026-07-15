@@ -21,7 +21,7 @@ export class CreateProductDto {
   @Min(0)
   price: number;
 
-  @ApiProperty({ description: '库存' })
+  @ApiProperty({ description: '实物库存（管理端录入；新建时等于可售库存）' })
   @IsInt()
   @Min(0)
   stock: number;

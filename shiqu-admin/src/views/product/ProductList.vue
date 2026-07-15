@@ -47,7 +47,15 @@
       <el-table-column label="价格" width="100">
         <template #default="{ row }">¥{{ formatPrice(row.price) }}</template>
       </el-table-column>
-      <el-table-column prop="stock" label="库存" width="90" />
+      <el-table-column label="可售库存" width="90">
+        <template #default="{ row }">{{ row.stock }}</template>
+      </el-table-column>
+      <el-table-column label="预占" width="90">
+        <template #default="{ row }">{{ row.reservedStock ?? 0 }}</template>
+      </el-table-column>
+      <el-table-column label="实物库存" width="90">
+        <template #default="{ row }">{{ row.physicalStock ?? row.stock }}</template>
+      </el-table-column>
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
           <el-tag :type="getProductStatusMeta(row.status).tagType">

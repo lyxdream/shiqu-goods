@@ -11,8 +11,13 @@
       <el-form-item label="价格" required>
         <el-input-number v-model="form.price" :min="0" :precision="2" />
       </el-form-item>
-      <el-form-item label="库存" required>
+      <el-form-item label="实物库存" required>
         <el-input-number v-model="form.stock" :min="0" />
+        <div v-if="isEdit" class="stock-hint muted">
+          待付款预占 {{ form.pendingReserved }} 件，已付款待自提预占
+          {{ form.paidReserved }} 件，可售库存 {{ sellableStock }} 件
+        </div>
+        <div v-else class="stock-hint muted">新建商品时实物库存等于可售库存</div>
       </el-form-item>
       <el-form-item label="商品图片">
         <ImageUpload v-model="form.image" />
@@ -60,6 +65,8 @@ const { loading, form, getId } = useDetailForm(
     name: '',
     price: 0,
     stock: 0,
+    pendingReserved: 0,
+    paidReserved: 0,
     image: '',
     description: '',
     status: 'on_sale' as Product['status'],
@@ -69,13 +76,19 @@ const { loading, form, getId } = useDetailForm(
     return {
       name: data.name,
       price: Number(data.price),
-      stock: data.stock,
+      stock: data.physicalStock ?? data.stock,
+      pendingReserved: data.pendingReserved ?? 0,
+      paidReserved: data.paidReserved ?? 0,
       image: data.image,
       description: data.description || '',
       status: data.status,
     }
   },
   { skip: () => !isEdit.value },
+)
+
+const sellableStock = computed(() =>
+  Math.max(0, form.stock - form.pendingReserved - form.paidReserved),
 )
 
 const { saving, handleSave } = useSaveForm(async () => {
@@ -94,3 +107,11 @@ function onSave() {
   return handleSave()
 }
 </script>
+
+<style scoped>
+.stock-hint {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+</style>
