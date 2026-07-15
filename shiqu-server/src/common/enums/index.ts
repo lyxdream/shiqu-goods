@@ -31,3 +31,17 @@ export const ORDER_STATUS_TRANSITIONS: Record<
   [OrderStatusEnum.PICKED_UP]: [],
   [OrderStatusEnum.CANCELLED]: [],
 };
+
+/** 未完结订单状态（待付款、已付款待自提） */
+export const UNFINISHED_ORDER_STATUSES: OrderStatusEnum[] = [
+  OrderStatusEnum.PENDING_PAYMENT,
+  OrderStatusEnum.PAID,
+];
+
+export enum AdminAuditActionEnum {
+  PRODUCT_DELETE = 'product.delete',
+}
+
+export enum AdminAuditTargetEnum {
+  PRODUCT = 'product',
+}

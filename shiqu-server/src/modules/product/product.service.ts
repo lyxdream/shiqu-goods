@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ProductStatusEnum } from 'src/common/enums';
+import {
+  ProductStatusEnum,
+  UNFINISHED_ORDER_STATUSES,
+} from 'src/common/enums';
+import type { JwtAdminPayload } from 'src/common/types/jwt-payload';
 import {
   mapPageProductsToApi,
   mapProductToApi,
@@ -9,6 +13,8 @@ import {
 } from 'src/common/utils/money.util';
 import { paginate } from 'src/common/utils/paginate.util';
 import { PagingDto } from 'src/common/dto';
+import { AuditService } from 'src/modules/audit/audit.service';
+import { OrderItem } from 'src/modules/order/entities/order-item.entity';
 import { BizNoService } from 'src/shared/biz-no';
 import { DbService } from 'src/shared/db';
 import { Product } from './entities/product.entity';
@@ -23,6 +29,7 @@ export class ProductService {
     private readonly productRepository: Repository<Product>,
     private readonly dbService: DbService,
     private readonly bizNoService: BizNoService,
+    private readonly auditService: AuditService,
   ) {}
 
   async findAllForCustomer(query: PagingDto) {
@@ -103,12 +110,34 @@ export class ProductService {
     return mapProductToApi(saved);
   }
 
-  async remove(id: number) {
+  async remove(id: number, admin: JwtAdminPayload) {
     const product = await this.productRepository.findOne({ where: { id } });
     if (!product) {
       throw new NotFoundException('商品不存在');
     }
-    await this.productRepository.remove(product);
+
+    await this.dbService.transaction(async (manager) => {
+      const unfinishedCount = await manager
+        .createQueryBuilder(OrderItem, 'item')
+        .innerJoin('item.order', 'order')
+        .where('item.productId = :productId', { productId: id })
+        .andWhere('order.status IN (:...statuses)', {
+          statuses: UNFINISHED_ORDER_STATUSES,
+        })
+        .getCount();
+
+      if (unfinishedCount > 0) {
+        throw new BadRequestException(
+          `该商品存在 ${unfinishedCount} 笔未完结订单（待付款或已付款），无法删除`,
+        );
+      }
+
+      product.status = ProductStatusEnum.OFF_SALE;
+      await manager.save(product);
+      await manager.softRemove(product);
+      await this.auditService.recordProductDelete(manager, admin, product);
+    });
+
     return null;
   }
 }

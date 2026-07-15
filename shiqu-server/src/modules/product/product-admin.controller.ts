@@ -13,6 +13,8 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AdminJwtAuthGuard } from 'src/common/guards/admin-jwt-auth.guard';
+import { CurrentAdmin } from 'src/common/decorators/current-admin.decorator';
+import type { JwtAdminPayload } from 'src/common/types/jwt-payload';
 import { DefaultThrottled } from 'src/common/decorators/throttle-scope.decorator';
 import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
@@ -62,8 +64,11 @@ export class ProductAdminController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: '删除商品' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.productService.remove(id);
+  @ApiOperation({ summary: '软删除商品' })
+  remove(
+    @CurrentAdmin() admin: JwtAdminPayload,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.productService.remove(id, admin);
   }
 }

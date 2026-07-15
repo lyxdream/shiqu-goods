@@ -1,4 +1,4 @@
-import { Column, Entity } from 'typeorm';
+import { Column, DeleteDateColumn, Entity } from 'typeorm';
 import { BaseEntity } from 'src/common/entities';
 import { ProductStatusEnum } from 'src/common/enums';
 
@@ -30,4 +30,7 @@ export class Product extends BaseEntity {
     default: ProductStatusEnum.ON_SALE,
   })
   status: ProductStatusEnum;
+
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt: Date | null;
 }

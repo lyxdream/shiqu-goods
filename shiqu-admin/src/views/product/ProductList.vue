@@ -114,9 +114,17 @@ function toggleStatus(row: Product) {
 }
 
 async function handleDelete(id: number) {
-  await ElMessageBox.confirm('确认删除该商品吗？', '提示', { type: 'warning' })
-  await deleteProduct(id)
-  ElMessage.success('删除成功')
-  fetchList()
+  await ElMessageBox.confirm(
+    '删除后商品将从列表隐藏，历史订单数据不受影响。存在未完结订单时将无法删除。确认删除吗？',
+    '提示',
+    { type: 'warning' },
+  )
+  try {
+    await deleteProduct(id)
+    ElMessage.success('删除成功')
+    fetchList()
+  } catch {
+    // 错误信息由 request 拦截器统一提示
+  }
 }
 </script>

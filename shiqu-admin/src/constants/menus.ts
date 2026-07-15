@@ -1,5 +1,5 @@
 import type { Component } from 'vue'
-import { Goods, List, Odometer, User } from '@element-plus/icons-vue'
+import { Document, Goods, List, Odometer, User } from '@element-plus/icons-vue'
 
 export interface MenuItem {
   path: string
@@ -32,6 +32,12 @@ export const MENUS: MenuItem[] = [
     title: '订单管理',
     icon: List,
     showOnDashboard: true,
+  },
+  {
+    path: '/audit-logs',
+    name: 'AuditLogList',
+    title: '操作日志',
+    icon: Document,
   },
 ]
 

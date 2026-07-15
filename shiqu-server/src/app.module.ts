@@ -29,6 +29,7 @@ import { AuthModule } from 'src/modules/auth/auth.module';
 import { AdminAuthModule } from 'src/modules/admin-auth/admin-auth.module';
 import { UserModule } from 'src/modules/user/user.module';
 import { AddressModule } from 'src/modules/address/address.module';
+import { AuditModule } from 'src/modules/audit/audit.module';
 import { ProductModule } from 'src/modules/product/product.module';
 import { OrderModule } from 'src/modules/order/order.module';
 import { UploadModule } from 'src/modules/upload/upload.module';
@@ -66,6 +67,7 @@ import { AppController } from './app.controller';
     AdminAuthModule,
     UserModule,
     AddressModule,
+    AuditModule,
     ProductModule,
     OrderModule,
     UploadModule,

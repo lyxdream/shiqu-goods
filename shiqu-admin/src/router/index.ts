@@ -64,6 +64,12 @@ const router = createRouter({
           component: () => import('@/views/order/OrderDetail.vue'),
           meta: { title: '订单详情' },
         },
+        {
+          path: 'audit-logs',
+          name: 'AuditLogList',
+          component: () => import('@/views/audit/AuditLogList.vue'),
+          meta: { title: getMenuTitle('/audit-logs') },
+        },
       ],
     },
   ],

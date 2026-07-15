@@ -71,3 +71,16 @@ export interface UploadResult {
   url: string
   filename: string
 }
+
+export interface AdminAuditLog {
+  id: number
+  adminId: number
+  adminUsername: string
+  action: string
+  targetType: string
+  targetId: number
+  targetLabel: string
+  detail: Record<string, unknown> | null
+  createdAt: string
+  updatedAt: string
+}
