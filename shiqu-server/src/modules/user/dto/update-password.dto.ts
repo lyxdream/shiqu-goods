@@ -8,7 +8,9 @@ export class UpdatePasswordDto {
   @IsNotEmpty()
   oldPassword: string;
 
-  @ApiProperty({ description: '新密码（8-12 位，须包含数字、大写、小写、下划线中至少三种）' })
+  @ApiProperty({
+    description: '新密码（8-12 位，须包含数字、大写、小写、下划线中至少三种）',
+  })
   @IsString()
   @IsNotEmpty()
   @IsStrongPassword()

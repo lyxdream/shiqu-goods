@@ -42,10 +42,7 @@ export class OrderController {
 
   @Get()
   @ApiOperation({ summary: '我的订单列表（支持按状态筛选和分页）' })
-  findAll(
-    @CurrentUser() user: JwtUserPayload,
-    @Query() query: QueryOrderDto,
-  ) {
+  findAll(@CurrentUser() user: JwtUserPayload, @Query() query: QueryOrderDto) {
     return this.orderService.findAllForUser(user.sub, query);
   }
 

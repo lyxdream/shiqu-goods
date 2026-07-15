@@ -1,6 +1,7 @@
 import { ResponseCode } from 'src/common/constants/response-code';
 import { BusinessException } from './business.exception';
 
+/** 业务「资源不存在」唯一出口；禁止在 service/controller 使用 Nest NotFoundException */
 export function throwNotFound(message: string): never {
   throw new BusinessException(ResponseCode.NOT_FOUND, message);
 }

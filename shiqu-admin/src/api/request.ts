@@ -40,8 +40,7 @@ request.interceptors.response.use(
     return responseStatusCallback(response)
   },
   (error) => {
-    const message = error.message || '网络异常'
-    ElMessage.error(message)
+    ElMessage.error(error.response?.data?.message || '网络异常')
     return Promise.reject(error)
   },
 )

@@ -9,7 +9,12 @@ import { Product } from './entities/product.entity';
 import { ProductService } from './product.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Product]), DbModule, BizNoModule, AuditModule],
+  imports: [
+    TypeOrmModule.forFeature([Product]),
+    DbModule,
+    BizNoModule,
+    AuditModule,
+  ],
   controllers: [ProductController, ProductAdminController],
   providers: [ProductService],
   exports: [ProductService],

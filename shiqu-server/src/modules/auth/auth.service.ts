@@ -72,7 +72,6 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-
     const user = await this.userRepository
       .createQueryBuilder('user')
       .addSelect('user.password')
@@ -136,9 +135,7 @@ export class AuthService {
     // 检查是否已被锁定
     const failCount = await this.redisService.get(lockKey);
     if (failCount && parseInt(failCount, 10) >= OTP_MAX_FAIL) {
-      throwBusiness(
-        `验证码错误次数过多，请 ${OTP_LOCK_TTL / 60} 分钟后重试`,
-      );
+      throwBusiness(`验证码错误次数过多，请 ${OTP_LOCK_TTL / 60} 分钟后重试`);
     }
 
     // 取出验证码
@@ -183,7 +180,9 @@ export class AuthService {
 
   private async buildToken(user: User) {
     const jti = crypto.randomUUID();
-    const expiresInSeconds = this.configService.get<number>('jwt.expiresInSeconds')!;
+    const expiresInSeconds = this.configService.get<number>(
+      'jwt.expiresInSeconds',
+    )!;
     const whitelistTtl = this.configService.get<number>('jwt.whitelistTtl')!;
     const now = Math.floor(Date.now() / 1000);
     const expiry = now + expiresInSeconds;

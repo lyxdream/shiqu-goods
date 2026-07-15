@@ -16,8 +16,6 @@ export class AddProductSoftDelete1720000000002 implements MigrationInterface {
     await queryRunner.query(
       'DROP INDEX `IDX_products_deleted_at` ON `products`',
     );
-    await queryRunner.query(
-      'ALTER TABLE `products` DROP COLUMN `deleted_at`',
-    );
+    await queryRunner.query('ALTER TABLE `products` DROP COLUMN `deleted_at`');
   }
 }

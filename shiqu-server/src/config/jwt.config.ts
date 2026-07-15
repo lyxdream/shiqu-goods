@@ -11,7 +11,10 @@ function requireSecret(name: string, fallback: string) {
   return fallback;
 }
 
-const JWT_EXPIRES_IN_DAYS = parseInt(process.env.JWT_EXPIRES_IN_DAYS || '7', 10);
+const JWT_EXPIRES_IN_DAYS = parseInt(
+  process.env.JWT_EXPIRES_IN_DAYS || '7',
+  10,
+);
 
 export default registerAs('jwt', () => ({
   secret: requireSecret('JWT_SECRET', 'shiqu-user-jwt-secret'),

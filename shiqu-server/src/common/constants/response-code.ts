@@ -9,7 +9,7 @@ export const ResponseCode = {
   /** 用户名或密码错误 */
   INVALID_CREDENTIALS: 1001,
   /** 参数校验 / 请求不合法 */
-  VALIDATION_ERROR: 1002,
+  VALIDATION_ERROR: 400,
   /** 账号已禁用 */
   ACCOUNT_DISABLED: 1003,
   /** 资源已存在 */
@@ -19,7 +19,11 @@ export const ResponseCode = {
   /** 业务规则不满足 */
   BUSINESS_ERROR: 1006,
   /** 无权限 */
-  FORBIDDEN: 1007,
+  FORBIDDEN: 403,
+  /** HTTP 方法不允许（与 HTTP 405 对应） */
+  METHOD_NOT_ALLOWED: 405,
+  /** 请求过于频繁（限流） */
+  RATE_LIMITED: 1008,
 
   INTERNAL_ERROR: 1099,
 } as const;

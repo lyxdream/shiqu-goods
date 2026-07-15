@@ -1,10 +1,7 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { PagingDto } from 'src/common/dto';
-import {
-  AdminAuditActionEnum,
-  AdminAuditTargetEnum,
-} from 'src/common/enums';
+import { AdminAuditActionEnum, AdminAuditTargetEnum } from 'src/common/enums';
 
 export class QueryAuditLogDto extends PagingDto {
   @ApiProperty({

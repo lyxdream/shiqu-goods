@@ -1,10 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  ProductStatusEnum,
-  UNFINISHED_ORDER_STATUSES,
-} from 'src/common/enums';
+import { ProductStatusEnum, UNFINISHED_ORDER_STATUSES } from 'src/common/enums';
 import {
   throwBusiness,
   throwNotFound,

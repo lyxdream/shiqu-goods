@@ -26,11 +26,15 @@ request.interceptors.response.use(
     return responseStatusCallback(response)
   },
   (error) => {
-    let message = '网络异常，请稍后重试'
-    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-      message = '请求超时，请检查网络后重试'
-    } else if (error.message === 'Network Error') {
-      message = '网络连接失败，请检查网络'
+    let message = error.response?.data?.message as string | undefined
+    if (!message) {
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        message = '请求超时，请检查网络后重试'
+      } else if (error.message === 'Network Error') {
+        message = '网络连接失败，请检查网络'
+      } else {
+        message = '网络异常，请稍后重试'
+      }
     }
     showToast(message)
     return Promise.reject(error)

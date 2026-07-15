@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsString, Length, Matches, MaxLength } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  Length,
+  Matches,
+  MaxLength,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { FieldLength } from 'src/common/constants/field-length';
 

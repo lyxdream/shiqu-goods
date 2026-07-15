@@ -2,12 +2,19 @@ import { ValidationPipe, RequestMethod } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import helmet from 'helmet';
+import type { RequestHandler } from 'express';
+import type { HelmetOptions } from 'helmet';
+import helmetPkg from 'helmet';
 import { join } from 'path';
-import { getHelmetOptions } from 'src/config/helmet.config';
+import { getHelmetOptions } from './config/helmet.config';
 import { LoggerService } from 'src/shared/logger';
 import { AppModule } from './app.module';
 import { setupSwagger } from './setup-swagger';
+
+/** helmet 8 为 CJS 包，default import 在 nodenext 下 eslint 类型服务无法解析 */
+const helmet = helmetPkg as unknown as (
+  options?: Readonly<HelmetOptions>,
+) => RequestHandler;
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -30,7 +37,8 @@ async function bootstrap() {
 
   const isProduction =
     configService.get<string>('app.nodeEnv') === 'production';
-  const swaggerEnabled = configService.get<boolean>('app.swaggerEnabled') === true;
+  const swaggerEnabled =
+    configService.get<boolean>('app.swaggerEnabled') === true;
   app.use(helmet(getHelmetOptions(isProduction, swaggerEnabled)));
 
   app.setGlobalPrefix('api', {
