@@ -48,13 +48,18 @@ export class ProductService {
   }
 
   async findOneForCustomer(id: number) {
-    const product = await this.productRepository.findOne({
-      where: { id, status: ProductStatusEnum.ON_SALE },
-    });
+    const product = await this.findVisibleForCustomer(id);
     if (!product) {
       throwNotFound('商品不存在或已下架');
     }
     return mapProductToApi(product);
+  }
+
+  /** C 端可见商品：在售且未软删（供 AI context 等复用） */
+  async findVisibleForCustomer(id: number): Promise<Product | null> {
+    return this.productRepository.findOne({
+      where: { id, status: ProductStatusEnum.ON_SALE },
+    });
   }
 
   async findAllForAdmin(query: QueryProductDto) {

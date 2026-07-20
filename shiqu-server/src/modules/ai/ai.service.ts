@@ -5,10 +5,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
 import { Repository } from 'typeorm';
-import { throwBusiness } from 'src/common/exceptions/biz-error.util';
-import { fromCents } from 'src/common/utils/money.util';
+import { throwBusiness, throwNotFound } from 'src/common/exceptions/biz-error.util';
+import { fromCents, mapProductToApi } from 'src/common/utils/money.util';
 import { ProductStatusEnum, AiSceneEnum } from 'src/common/enums';
 import { Product } from 'src/modules/product/entities/product.entity';
+import { ProductService } from 'src/modules/product/product.service';
 import { Order } from 'src/modules/order/entities/order.entity';
 import { AiChatDto } from './dto/ai-chat.dto';
 import { AiParseDocumentDto } from './dto/ai-parse-document.dto';
@@ -34,6 +35,7 @@ export class AiService {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    private readonly productService: ProductService,
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     @InjectRepository(Order)
@@ -114,20 +116,25 @@ export class AiService {
     }
 
     if (body.productId) {
-      const product = await this.productRepository.findOne({
-        where: { id: body.productId },
-      });
+      const product = await this.productService.findVisibleForCustomer(
+        body.productId,
+      );
       if (product) {
+        const mapped = mapProductToApi(product);
         context.product = {
-          id: product.id,
-          productNo: product.productNo,
-          name: product.name,
-          price: fromCents(product.price),
-          stock: product.stock,
-          description: product.description,
-          status: product.status,
-          image: product.image,
+          id: mapped.id,
+          productNo: mapped.productNo,
+          name: mapped.name,
+          price: mapped.price,
+          stock: mapped.stock,
+          description: mapped.description,
+          image: mapped.image,
         };
+      } else if (
+        scene === AiSceneEnum.PRODUCT_QA ||
+        scene === AiSceneEnum.GRASS_COPY
+      ) {
+        throwNotFound('商品不存在或已下架');
       }
     }
 
