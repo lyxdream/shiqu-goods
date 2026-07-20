@@ -45,3 +45,13 @@ export enum AdminAuditActionEnum {
 export enum AdminAuditTargetEnum {
   PRODUCT = 'product',
 }
+
+/** AI 对话场景（与 C 端 AiScene、shiqu-ai ALLOWED_SCENES 保持一致） */
+export enum AiSceneEnum {
+  PRODUCT_QA = 'product_qa',
+  ORDER_HELP = 'order_help',
+  ASSISTANT = 'assistant',
+  PRODUCT_RECOMMEND = 'product_recommend',
+  GRASS_COPY = 'grass_copy',
+  PURCHASE_LIST = 'purchase_list',
+}

@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
 
+from app.ai_scenes import ALLOWED_SCENES
+
 
 class ProductBrief(BaseModel):
     id: int
@@ -20,10 +22,7 @@ class ChatRequest(BaseModel):
     session_id: str | None = Field(default=None, alias="sessionId")
     scene: str | None = Field(
         default="assistant",
-        description=(
-            "product_qa | order_help | assistant | "
-            "product_recommend | grass_copy | purchase_list"
-        ),
+        description=" | ".join(sorted(ALLOWED_SCENES)),
     )
     product_id: int | None = Field(default=None, alias="productId")
     order_id: int | None = Field(default=None, alias="orderId")

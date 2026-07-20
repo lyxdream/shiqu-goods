@@ -1,5 +1,7 @@
+import logging
 import re
 
+from app.ai_scenes import ALLOWED_SCENES, DEFAULT_SCENE
 from app.config import settings
 from app.schemas import ChatRequest, ChatResult
 from app.services import llm_service, session_store
@@ -7,6 +9,16 @@ from app.services import grass_copy_service, purchase_list_service, recommend_se
 from app.services import prompt_builder
 from app.services.recommend_service import validate_product_ids, _eligible_products
 from app.utils import format_price_yuan
+
+logger = logging.getLogger(__name__)
+
+
+def normalize_scene(raw: str | None) -> str:
+    scene = (raw or DEFAULT_SCENE).strip()
+    if scene not in ALLOWED_SCENES:
+        logger.warning("invalid scene=%r, fallback to %s", scene, DEFAULT_SCENE)
+        return DEFAULT_SCENE
+    return scene
 
 
 def _strip_markdown(text: str) -> str:
@@ -357,7 +369,7 @@ def _chat_rule(req: ChatRequest, scene: str) -> ChatResult:
 
 
 def chat(req: ChatRequest) -> ChatResult:
-    scene = (req.scene or "assistant").strip()
+    scene = normalize_scene(req.scene)
     session_store.append_message(req.session_id, "user", req.message)
 
     result: ChatResult | None = None

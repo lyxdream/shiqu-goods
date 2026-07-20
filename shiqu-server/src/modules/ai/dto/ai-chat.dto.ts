@@ -1,6 +1,16 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+  Min,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { AiSceneEnum } from 'src/common/enums';
 
 export class AiChatDto {
   @ApiProperty({ description: '用户消息' })
@@ -15,12 +25,15 @@ export class AiChatDto {
 
   @ApiProperty({
     required: false,
+    enum: AiSceneEnum,
     description:
       '场景：product_qa | order_help | assistant | product_recommend | grass_copy | purchase_list',
   })
   @IsOptional()
-  @IsString()
-  scene?: string;
+  @IsEnum(AiSceneEnum, { message: '无效的场景参数' })
+  @MaxLength(32)
+  @Matches(/^[a-z_]+$/, { message: '无效的场景参数' })
+  scene?: AiSceneEnum;
 
   @ApiProperty({ required: false, description: '商品 ID（商品答疑）' })
   @IsOptional()

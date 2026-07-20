@@ -7,7 +7,7 @@ import { firstValueFrom } from 'rxjs';
 import { Repository } from 'typeorm';
 import { throwBusiness } from 'src/common/exceptions/biz-error.util';
 import { fromCents } from 'src/common/utils/money.util';
-import { ProductStatusEnum } from 'src/common/enums';
+import { ProductStatusEnum, AiSceneEnum } from 'src/common/enums';
 import { Product } from 'src/modules/product/entities/product.entity';
 import { Order } from 'src/modules/order/entities/order.entity';
 import { AiChatDto } from './dto/ai-chat.dto';
@@ -71,8 +71,8 @@ export class AiService {
   }
 
   async chat(userId: number, body: AiChatDto) {
-    const scene = body.scene || this.inferScene(body);
-    const context = await this.buildContext(userId, body);
+    const scene = this.resolveScene(body);
+    const context = await this.buildContext(userId, body, scene);
 
     return this.forward(`${this.baseUrl}/chat`, {
       message: body.message,
@@ -88,20 +88,27 @@ export class AiService {
     return this.forward(`${this.baseUrl}/document/parse`, body);
   }
 
-  private inferScene(body: AiChatDto): string {
-    if (body.productId) return 'product_qa';
-    if (body.orderId) return 'order_help';
-    return 'assistant';
+  private resolveScene(body: AiChatDto): AiSceneEnum {
+    return body.scene ?? this.inferScene(body);
   }
 
-  private async buildContext(userId: number, body: AiChatDto) {
+  private inferScene(body: AiChatDto): AiSceneEnum {
+    if (body.productId) return AiSceneEnum.PRODUCT_QA;
+    if (body.orderId) return AiSceneEnum.ORDER_HELP;
+    return AiSceneEnum.ASSISTANT;
+  }
+
+  private async buildContext(
+    userId: number,
+    body: AiChatDto,
+    scene: AiSceneEnum,
+  ) {
     const context: Record<string, unknown> = {};
-    const scene = body.scene || this.inferScene(body);
 
     if (
-      scene === 'product_recommend' ||
-      scene === 'assistant' ||
-      scene === 'purchase_list'
+      scene === AiSceneEnum.PRODUCT_RECOMMEND ||
+      scene === AiSceneEnum.ASSISTANT ||
+      scene === AiSceneEnum.PURCHASE_LIST
     ) {
       context.products = await this.getOnSaleProducts();
     }
